@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: tanki-postgres
+    environment:
+      POSTGRES_USER: tanki
+      POSTGRES_PASSWORD: tanki
+      POSTGRES_DB: tanki
+    ports:
+      - "5432:5432"
+    volumes:
+      - tanki_pg_data:/var/lib/postgresql/data
+      - ./internal/migration:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+volumes:
+  tanki_pg_data:

@@ -21,7 +21,7 @@ const (
 	envPrefix        = "TANKI_"
 	defaultEnv       = "dev"
 	defaultHTTPAddr  = ":8080"
-	defaultPGDSN     = "plug" //заглушка
+	defaultPGDSN     = "" //заглушка plug
 	defaultTickRate  = 30 * time.Millisecond
 	defaultXpPerKill = 34
 )
@@ -63,7 +63,7 @@ func Load() (*Config, error) {
 	}
 
 	// PostgreSQL DSN
-	cfg.PGDSN = getEnv("PG_DSN", defaultPGDSN) //! убрать заглушку defaultPGDSN
+	cfg.PGDSN = getEnv("PG_DSN", defaultPGDSN) //!  убрать заглушку defaultPGDSN
 	if cfg.PGDSN == "" {
 		return nil, fmt.Errorf("database DSN cannot be empty")
 	}
