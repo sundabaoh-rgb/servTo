@@ -1,0 +1,265 @@
+/* ===========================
+   Глобальные стили
+=========================== */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Tahoma, sans-serif;
+  background: #0d0f0d;
+  color: #e5e5e5;
+}
+
+.game-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 10px;
+}
+
+/* ===========================
+   ТОПБАР
+=========================== */
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: linear-gradient(#3c3c3c, #1c1c1c);
+  border: 1px solid #000;
+  border-radius: 3px;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+  color: #f0e68c;
+  text-shadow: 0 0 6px #000;
+}
+
+.topbar-menu {
+  display: flex;
+  gap: 8px;
+}
+
+.menu-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 3px;
+  background: linear-gradient(#555, #2e2e2e);
+  border: 1px solid #000;
+  cursor: pointer;
+  color: #eee;
+}
+
+.menu-btn.active {
+  background: linear-gradient(#e1b93d, #9d741a);
+  color: #000;
+}
+
+.menu-btn:disabled {
+  opacity: .4;
+}
+
+/* ===========================
+   Основная сетка
+=========================== */
+
+.layout-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr 350px;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.panel-title {
+  padding: 6px;
+  background: linear-gradient(#404040, #1f1f1f);
+  border: 1px solid #000;
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+/* ===========================
+   Карточки
+=========================== */
+
+.card {
+  background: #171a17;
+  border: 1px solid #000;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ===========================
+   Формы
+=========================== */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.field input {
+  background: #0d100d;
+  border: 1px solid #3d433e;
+  padding: 4px 6px;
+  color: #d4d4d4;
+  border-radius: 2px;
+}
+
+input:focus {
+  border-color: #83d14e;
+  outline: none;
+  box-shadow: 0 0 4px #83d14e;
+}
+
+.form-msg {
+  font-size: 12px;
+  margin-top: 4px;
+  color: #83d14e;
+}
+
+.form-msg.error {
+  color: #e35555;
+}
+
+/* ===========================
+   Кнопки
+=========================== */
+
+.btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 3px;
+  border: 1px solid #000;
+  cursor: pointer;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+}
+
+.btn-green { background: linear-gradient(#8fd84b, #5e8a28); color: #000; }
+.btn-yellow { background: linear-gradient(#e1c253, #b28719); color: #000; }
+.btn-blue { background: linear-gradient(#6c90c9, #345184); }
+.btn-red { background: linear-gradient(#e25a4a, #9c2b21); }
+
+/* ===========================
+   Таблица комнат
+=========================== */
+
+.rooms-list {
+  overflow-y: auto;
+  max-height: 400px;
+  border: 1px solid #0c1a0c;
+  border-radius: 3px;
+}
+
+#rooms-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+#rooms-table thead {
+  background: linear-gradient(#1f3f1c, #0c2909);
+  color: #d8ffd8;
+}
+
+#rooms-table th, #rooms-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #0a1908;
+}
+
+#rooms-table tbody tr {
+  background: #102010;
+}
+
+#rooms-table tbody tr:nth-child(2n) {
+  background: #0d1b0d;
+}
+
+#rooms-table tbody tr:hover {
+  background: #2c5a28;
+}
+
+/* ===========================
+   Battle info
+=========================== */
+
+.battle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.battle-image {
+  height: 160px;
+  background: url('https://i.imgur.com/0NaQmWJ.jpeg') center/cover;
+  border: 1px solid #000;
+  border-radius: 3px;
+}
+
+/* ===========================
+   Лог
+=========================== */
+
+.small-log {
+  font-size: 12px;
+}
+
+.log-title {
+  background: #333;
+  padding: 4px;
+  border-radius: 2px;
+}
+
+.log-body {
+  background: #0b0f0b;
+  padding: 6px;
+  height: 120px;
+  overflow-y: auto;
+  color: #6de26d;
+}
+
+/* ===========================
+   Футер
+=========================== */
+
+.footer {
+  margin-top: 10px;
+  text-align: center;
+  padding: 6px;
+  opacity: .5;
+  font-size: 12px;
+}
+
+/* ===========================
+   Адаптив
+=========================== */
+
+@media (max-width: 1050px) {
+  .layout-grid {
+    grid-template-columns: 1fr;
+  }
+}

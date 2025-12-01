@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Tanki Online – Lobby</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="game-wrapper">
+
+  <!-- ===== Верхняя панель ===== -->
+  <header class="topbar">
+    <div class="logo">TANKI ONLINE</div>
+
+    <nav class="topbar-menu">
+      <button class="menu-btn active">Битвы</button>
+      <button class="menu-btn" disabled>Гараж</button>
+      <button class="menu-btn" disabled>Клан</button>
+      <button class="menu-btn" disabled>Магазин</button>
+    </nav>
+
+    <div class="user-info">
+      <span class="label">Игрок:</span>
+      <span id="current-user" class="value">—</span>
+    </div>
+  </header>
+
+  <!-- ===== Основная зона ===== -->
+  <main class="layout-grid">
+
+    <!-- ===== Левая колонка – Профиль ===== -->
+    <section class="left-panel panel">
+      <h2 class="panel-title">Профиль</h2>
+
+      <form id="login-form" class="card">
+        <h3>Войти</h3>
+        <label class="field">
+          Ник
+          <input type="text" name="nickname" required>
+        </label>
+        <label class="field">
+          Пароль
+          <input type="password" name="password" required>
+        </label>
+        <button class="btn btn-green" type="submit">Войти</button>
+        <div id="login-msg" class="form-msg"></div>
+      </form>
+
+      <form id="register-form" class="card">
+        <h3>Регистрация</h3>
+        <label class="field">
+          Ник
+          <input type="text" name="nickname" required minlength="4">
+        </label>
+        <label class="field">
+          Пароль
+          <input type="password" name="password" required minlength="3">
+        </label>
+        <button class="btn btn-yellow" type="submit">Создать</button>
+        <div id="register-msg" class="form-msg"></div>
+      </form>
+
+      <div class="card session-card">
+        <h3>Сессия</h3>
+        <p>Access: <span id="access-token">—</span></p>
+        <p>Refresh: <span id="refresh-token">—</span></p>
+
+        <button id="refresh-btn" class="btn btn-blue">Обновить</button>
+        <button id="logout-btn" class="btn btn-red">Выйти</button>
+        <div id="session-msg" class="form-msg"></div>
+      </div>
+    </section>
+
+    <!-- ===== Центр – Комнаты ===== -->
+    <section class="center-panel panel">
+      <h2 class="panel-title">Список битв</h2>
+
+      <form id="create-room-form" class="card">
+        <h3>Создание комнаты</h3>
+        <div class="grid-2">
+          <label class="field">
+            Название
+            <input type="text" name="name" required>
+          </label>
+          <label class="field">
+            Макс. игроков
+            <input type="number" name="max_players" value="8" min="1">
+          </label>
+          <label class="field">
+            Минут
+            <input type="number" name="duration_minutes" value="15">
+          </label>
+          <label class="field">
+            Gold per kill
+            <input type="number" name="gold_per_kill" value="100">
+          </label>
+          <label class="field">
+            Fund mod.
+            <input type="number" name="fund_modifier" value="1.5" step="0.1">
+          </label>
+        </div>
+        <button class="btn btn-green">Создать</button>
+        <div id="create-room-msg" class="form-msg"></div>
+      </form>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Комнаты</h3>
+          <button id="reload-rooms-btn" class="btn btn-blue btn-sm">Обновить</button>
+        </div>
+
+        <div class="rooms-list">
+          <table id="rooms-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Owner</th>
+                <th>Игроки</th>
+                <th>Мин</th>
+                <th>Gold</th>
+                <th>Fund</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div id="rooms-msg" class="form-msg"></div>
+      </div>
+    </section>
+
+    <!-- ===== Правая сторона – Infoside ===== -->
+ <section class="right-panel panel">
+  <h2 class="panel-title">Информация о битве</h2>
+
+  <div class="card battle-info">
+    <div class="battle-image"></div>
+
+    <h3 class="battle-info-title">—</h3>
+
+    <div class="battle-stats">
+      <p><strong>Режим:</strong> <span class="battle-mode">DM</span></p>
+      <p><strong>Время:</strong> <span class="battle-time">15 мин</span></p>
+      <p><strong>Игроки:</strong> <span class="battle-players">0/8</span></p>
+    </div>
+
+    <hr>
+    <ul class="battle-players-list">
+      <li class="small">Выберите комнату слева и нажмите Join.</li>
+    </ul>
+  </div>
+
+  <div class="card small-log">
+    <div class="log-title">Системный лог</div>
+    <div id="fake-chat" class="log-body">
+      <div>[INFO] UI загружен</div>
+    </div>
+  </div>
+</section>
+
+
+  </main>
+
+  <footer class="footer">
+    tankionline-go • dev build
+  </footer>
+
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>
