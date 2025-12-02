@@ -9,27 +9,39 @@ import (
 
 	"github.com/sundabaoh-rgb/tankionline/internal/auth"
 	"github.com/sundabaoh-rgb/tankionline/internal/logger"
+	"github.com/sundabaoh-rgb/tankionline/internal/match"
 	"github.com/sundabaoh-rgb/tankionline/internal/room"
+	"github.com/sundabaoh-rgb/tankionline/internal/ws"
 )
 
 type Server struct {
-	addr        string
-	log         logger.Logger
-	http        *http.Server
-	mux         *chi.Mux
-	authService auth.Service
-	roomService room.Service
+	addr         string
+	log          logger.Logger
+	http         *http.Server
+	mux          *chi.Mux
+	authService  auth.Service
+	roomService  room.Service
+	matchService *match.Service
+	wsHub        *ws.Hub
 }
 
-func New(addr string, log logger.Logger, authService auth.Service, roomService room.Service) *Server {
+func New(addr string,
+	log logger.Logger,
+	authSvc auth.Service,
+	roomSvc room.Service,
+	matchSvc *match.Service,
+	wsHub *ws.Hub,
+) *Server {
 	mux := chi.NewRouter()
 
 	s := &Server{
-		addr:        addr,
-		log:         log.Named("http"),
-		mux:         mux,
-		authService: authService,
-		roomService: roomService,
+		addr:         addr,
+		log:          log.Named("http"),
+		mux:          mux,
+		authService:  authSvc,
+		roomService:  roomSvc,
+		matchService: matchSvc,
+		wsHub:        wsHub,
 		http: &http.Server{
 			Addr:         addr,
 			Handler:      mux,
@@ -39,7 +51,7 @@ func New(addr string, log logger.Logger, authService auth.Service, roomService r
 		},
 	}
 
-	s.registerRoutes()
+	s.setupRouter()
 
 	return s
 }

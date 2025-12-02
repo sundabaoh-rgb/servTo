@@ -2,8 +2,12 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Tanki Online – Lobby</title>
+  <title>Tanki Online – Боевое Лобби</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="https://img.icons8.com/color/96/000000/tank.png">
 </head>
 <body>
 
@@ -11,18 +15,49 @@
 
   <!-- ===== Верхняя панель ===== -->
   <header class="topbar">
-    <div class="logo">TANKI ONLINE</div>
+    <div class="logo">
+      <i class="fas fa-tank fa-beat"></i>
+      <span class="logo-text">TANKI<span class="logo-highlight">ONLINE</span></span>
+      <span class="version-badge">v1.0</span>
+    </div>
 
-    <nav class="topbar-menu">
-      <button class="menu-btn active">Битвы</button>
-      <button class="menu-btn" disabled>Гараж</button>
-      <button class="menu-btn" disabled>Клан</button>
-      <button class="menu-btn" disabled>Магазин</button>
+    <!-- Мобильное меню-бургер -->
+    <button class="mobile-menu-btn" id="mobile-menu-btn">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <nav class="topbar-menu" id="topbar-menu">
+      <button class="menu-btn active" id="btn-battles">
+        <i class="fas fa-crosshairs"></i>
+        <span>Битвы</span>
+        <span class="menu-pulse"></span>
+      </button>
+      <button class="menu-btn" id="btn-garage" disabled>
+        <i class="fas fa-tank"></i>
+        <span>Гараж</span>
+      </button>
+      <button class="menu-btn" id="btn-clan" disabled>
+        <i class="fas fa-users"></i>
+        <span>Клан</span>
+      </button>
+      <button class="menu-btn" id="btn-shop" disabled>
+        <i class="fas fa-shopping-cart"></i>
+        <span>Магазин</span>
+      </button>
     </nav>
 
     <div class="user-info">
-      <span class="label">Игрок:</span>
-      <span id="current-user" class="value">—</span>
+      <div class="user-avatar">
+        <i class="fas fa-helmet-battle"></i>
+      </div>
+      <div class="user-details">
+        <span class="label">Танкист:</span>
+        <span id="current-user" class="value">Гость</span>
+      </div>
+      <div class="user-status" id="user-status">
+        <div class="status-dot offline"></div>
+        <span class="status-text">Оффлайн</span>
+      </div>
     </div>
   </header>
 
@@ -31,97 +66,183 @@
 
     <!-- ===== Левая колонка – Профиль ===== -->
     <section class="left-panel panel">
-      <h2 class="panel-title">Профиль</h2>
+      <div class="panel-header panel-header-explosion">
+        <i class="fas fa-id-card"></i>
+        <h2 class="panel-title panel-title-explosion">Танковый Профиль</h2>
+        <div class="explosion-effect"></div>
+      </div>
 
-      <form id="login-form" class="card">
-        <h3>Войти</h3>
+      <form id="login-form" class="card card-login">
+        <div class="card-header">
+          <i class="fas fa-sign-in-alt"></i>
+          <h3>Войти в бой</h3>
+        </div>
         <label class="field">
-          Ник
-          <input type="text" name="nickname" required>
+          <span class="field-label">Позывной</span>
+          <div class="input-wrapper">
+            <i class="fas fa-user-helmet-safety"></i>
+            <input type="text" name="nickname" required placeholder="Введите позывной">
+          </div>
         </label>
         <label class="field">
-          Пароль
-          <input type="password" name="password" required>
+          <span class="field-label">Код доступа</span>
+          <div class="input-wrapper">
+            <i class="fas fa-lock"></i>
+            <input type="password" name="password" required placeholder="Введите пароль">
+          </div>
         </label>
-        <button class="btn btn-green" type="submit">Войти</button>
+        <button class="btn btn-green btn-tank" type="submit">
+          <i class="fas fa-play"></i>
+          <span>В БОЙ!</span>
+        </button>
         <div id="login-msg" class="form-msg"></div>
       </form>
 
-      <form id="register-form" class="card">
-        <h3>Регистрация</h3>
+      <form id="register-form" class="card card-register">
+        <div class="card-header">
+          <i class="fas fa-user-plus"></i>
+          <h3>Новый танкист</h3>
+        </div>
         <label class="field">
-          Ник
-          <input type="text" name="nickname" required minlength="4">
+          <span class="field-label">Позывной</span>
+          <div class="input-wrapper">
+            <i class="fas fa-user-tag"></i>
+            <input type="text" name="nickname" required minlength="4" placeholder="От 4 символов">
+          </div>
         </label>
         <label class="field">
-          Пароль
-          <input type="password" name="password" required minlength="3">
+          <span class="field-label">Код доступа</span>
+          <div class="input-wrapper">
+            <i class="fas fa-key"></i>
+            <input type="password" name="password" required minlength="3" placeholder="От 3 символов">
+          </div>
         </label>
-        <button class="btn btn-yellow" type="submit">Создать</button>
+        <button class="btn btn-yellow btn-tank" type="submit">
+          <i class="fas fa-plus-circle"></i>
+          <span>ЗАПИСАТЬСЯ!</span>
+        </button>
         <div id="register-msg" class="form-msg"></div>
       </form>
 
       <div class="card session-card">
-        <h3>Сессия</h3>
-        <p>Access: <span id="access-token">—</span></p>
-        <p>Refresh: <span id="refresh-token">—</span></p>
-
-        <button id="refresh-btn" class="btn btn-blue">Обновить</button>
-        <button id="logout-btn" class="btn btn-red">Выйти</button>
+        <div class="card-header">
+          <i class="fas fa-shield-alt"></i>
+          <h3>Боевая сессия</h3>
+        </div>
+        <div class="session-info">
+          <div class="token-item">
+            <span class="token-label">Access Token:</span>
+            <span id="access-token" class="token-value">Не авторизован</span>
+          </div>
+          <div class="token-item">
+            <span class="token-label">Refresh Token:</span>
+            <span id="refresh-token" class="token-value">Не авторизован</span>
+          </div>
+        </div>
+        <div class="session-buttons">
+          <button id="refresh-btn" class="btn btn-blue">
+            <i class="fas fa-sync-alt"></i>
+            Обновить
+          </button>
+          <button id="logout-btn" class="btn btn-red">
+            <i class="fas fa-sign-out-alt"></i>
+            Покинуть базу
+          </button>
+        </div>
         <div id="session-msg" class="form-msg"></div>
       </div>
     </section>
 
     <!-- ===== Центр – Комнаты ===== -->
     <section class="center-panel panel">
-      <h2 class="panel-title">Список битв</h2>
+      <div class="panel-header panel-header-explosion">
+        <i class="fas fa-crosshairs"></i>
+        <h2 class="panel-title panel-title-explosion">Карта Битв</h2>
+        <div class="rooms-stats">
+          <span class="stat-badge" id="rooms-count">0</span>
+          <span class="stat-label">комнат</span>
+        </div>
+        <div class="explosion-effect"></div>
+      </div>
 
-      <form id="create-room-form" class="card">
-        <h3>Создание комнаты</h3>
+      <form id="create-room-form" class="card card-create-room">
+        <div class="card-header">
+          <i class="fas fa-plus-circle"></i>
+          <h3>Создать сражение</h3>
+        </div>
         <div class="grid-2">
           <label class="field">
-            Название
-            <input type="text" name="name" required>
+            <span class="field-label">Название</span>
+            <div class="input-wrapper">
+              <i class="fas fa-heading"></i>
+              <input type="text" name="name" required placeholder="Название поля боя">
+            </div>
           </label>
           <label class="field">
-            Макс. игроков
-            <input type="number" name="max_players" value="8" min="1">
+            <span class="field-label">Макс. игроков</span>
+            <div class="input-wrapper">
+              <i class="fas fa-users"></i>
+              <input type="number" name="max_players" value="8" min="1" max="16">
+            </div>
           </label>
           <label class="field">
-            Минут
-            <input type="number" name="duration_minutes" value="15">
+            <span class="field-label">Минут боя</span>
+            <div class="input-wrapper">
+              <i class="fas fa-clock"></i>
+              <input type="number" name="duration_minutes" value="15" min="5" max="60">
+            </div>
           </label>
           <label class="field">
-            Gold per kill
-            <input type="number" name="gold_per_kill" value="100">
+            <span class="field-label">Gold за убийство</span>
+            <div class="input-wrapper">
+              <i class="fas fa-coins"></i>
+              <input type="number" name="gold_per_kill" value="100" min="10" max="1000">
+            </div>
           </label>
           <label class="field">
-            Fund mod.
-            <input type="number" name="fund_modifier" value="1.5" step="0.1">
+            <span class="field-label">Модификатор фонда</span>
+            <div class="input-wrapper">
+              <i class="fas fa-chart-line"></i>
+              <input type="number" name="fund_modifier" value="1.5" step="0.1" min="1.0" max="5.0">
+            </div>
           </label>
         </div>
-        <button class="btn btn-green">Создать</button>
+        <button class="btn btn-green btn-tank">
+          <i class="fas fa-gamepad"></i>
+          <span>СОЗДАТЬ БИТВУ!</span>
+        </button>
         <div id="create-room-msg" class="form-msg"></div>
       </form>
 
-      <div class="card">
+      <div class="card rooms-card">
         <div class="card-header">
-          <h3>Комнаты</h3>
-          <button id="reload-rooms-btn" class="btn btn-blue btn-sm">Обновить</button>
+          <div class="header-left">
+            <i class="fas fa-list"></i>
+            <h3>Активные битвы</h3>
+          </div>
+          <div class="header-right">
+            <div class="online-count">
+              <i class="fas fa-wifi"></i>
+              <span id="online-count">0</span>
+            </div>
+            <button id="reload-rooms-btn" class="btn btn-blue btn-sm">
+              <i class="fas fa-redo"></i>
+              Разведка
+            </button>
+          </div>
         </div>
 
-        <div class="rooms-list">
+        <div class="rooms-list-container">
           <table id="rooms-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Название</th>
-                <th>Owner</th>
-                <th>Игроки</th>
-                <th>Мин</th>
-                <th>Gold</th>
-                <th>Fund</th>
-                <th></th>
+                <th><i class="fas fa-hashtag"></i> ID</th>
+                <th><i class="fas fa-heading"></i> Поле боя</th>
+                <th><i class="fas fa-crown"></i> Командир</th>
+                <th><i class="fas fa-users"></i> Игроки</th>
+                <th><i class="fas fa-clock"></i> Время</th>
+                <th><i class="fas fa-coins"></i> Gold</th>
+                <th><i class="fas fa-chart-line"></i> Фонд</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -132,40 +253,113 @@
       </div>
     </section>
 
-    <!-- ===== Правая сторона – Infoside ===== -->
- <section class="right-panel panel">
-  <h2 class="panel-title">Информация о битве</h2>
+    <!-- ===== Правая сторона – Инфо о битве ===== -->
+    <section class="right-panel panel">
+      <div class="panel-header panel-header-explosion">
+        <i class="fas fa-info-circle"></i>
+        <h2 class="panel-title panel-title-explosion">Боевая сводка</h2>
+        <div class="explosion-effect"></div>
+      </div>
 
-  <div class="card battle-info">
-    <div class="battle-image"></div>
+      <div class="card battle-info">
+        <div class="battle-image">
+          <div class="tank-icon">
+            <i class="fas fa-tank fa-beat"></i>
+          </div>
+          <div class="map-preview">
+            <div class="grid-cell"></div>
+            <div class="grid-cell cell-obs"></div>
+            <div class="grid-cell"></div>
+            <div class="grid-cell cell-base"></div>
+          </div>
+        </div>
 
-    <h3 class="battle-info-title">—</h3>
+        <h3 class="battle-info-title" id="battle-title">Выберите поле боя</h3>
 
-    <div class="battle-stats">
-      <p><strong>Режим:</strong> <span class="battle-mode">DM</span></p>
-      <p><strong>Время:</strong> <span class="battle-time">15 мин</span></p>
-      <p><strong>Игроки:</strong> <span class="battle-players">0/8</span></p>
-    </div>
+        <div class="battle-stats">
+          <div class="stat-item">
+            <i class="fas fa-flag"></i>
+            <span class="stat-label">Режим:</span>
+            <span class="battle-mode" id="battle-mode">Deathmatch</span>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-clock"></i>
+            <span class="stat-label">Время:</span>
+            <span class="battle-time" id="battle-time">—</span>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-users"></i>
+            <span class="stat-label">Игроки:</span>
+            <span class="battle-players" id="battle-players">0/8</span>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-coins"></i>
+            <span class="stat-label">Награда:</span>
+            <span class="battle-reward" id="battle-reward">0 gold</span>
+          </div>
+        </div>
 
-    <hr>
-    <ul class="battle-players-list">
-      <li class="small">Выберите комнату слева и нажмите Join.</li>
-    </ul>
-  </div>
+        <div class="join-section">
+          <button id="join-room-btn" class="btn btn-green btn-large btn-tank" disabled>
+            <i class="fas fa-play"></i>
+            <span>ВСТУПИТЬ В БИТВУ</span>
+          </button>
+          <p class="hint" id="battle-hint">Выберите поле боя из списка слева</p>
+          <div class="countdown" id="countdown" style="display: none;">
+            <i class="fas fa-hourglass-half"></i>
+            <span>Автостарт через: <span id="countdown-timer">5</span>с</span>
+          </div>
+        </div>
 
-  <div class="card small-log">
-    <div class="log-title">Системный лог</div>
-    <div id="fake-chat" class="log-body">
-      <div>[INFO] UI загружен</div>
-    </div>
-  </div>
-</section>
+        <div class="players-section">
+          <h4><i class="fas fa-users"></i> Экипажи на поле:</h4>
+          <ul class="battle-players-list" id="battle-players-list">
+            <li class="empty">
+              <i class="fas fa-door-open"></i>
+              Выберите поле боя из списка слева
+            </li>
+          </ul>
+        </div>
+      </div>
 
+      <div class="card small-log">
+        <div class="log-header">
+          <i class="fas fa-terminal"></i>
+          <div class="log-title">Боевой лог</div>
+          <button class="btn-log-clear" id="clear-log-btn" title="Очистить лог">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+        <div id="fake-chat" class="log-body">
+          <div class="log-entry info"><span class="time">[12:00]</span> Система: Боевой интерфейс загружен</div>
+          <div class="log-entry success"><span class="time">[12:00]</span> Добро пожаловать в Tanki Online!</div>
+          <div class="log-entry"><span class="time">[12:00]</span> Выберите поле боя для начала сражения</div>
+        </div>
+        <div class="log-input">
+          <input type="text" placeholder="Введите боевое сообщение..." disabled>
+          <button class="btn btn-blue btn-sm" disabled><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </section>
 
   </main>
 
   <footer class="footer">
-    tankionline-go • dev build
+    <div class="footer-content">
+      <div class="server-status">
+        <span class="status-indicator online" id="server-status-indicator"></span>
+        <span>Статус базы: <strong id="server-status-text">Online</strong></span>
+      </div>
+      <div class="version">
+        <i class="fas fa-code"></i>
+        tankionline-go • боевая сборка v1.0
+      </div>
+      <div class="stats">
+        <span><i class="fas fa-users"></i> Онлайн: <span id="footer-online">0</span></span>
+        <span><i class="fas fa-tank"></i> Битв: <span id="footer-rooms">0</span></span>
+        <span><i class="fas fa-crosshairs"></i> Игроков в бою: <span id="footer-battling">0</span></span>
+      </div>
+    </div>
   </footer>
 
 </div>

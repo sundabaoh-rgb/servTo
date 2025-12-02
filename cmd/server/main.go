@@ -16,8 +16,10 @@ import (
 	"github.com/sundabaoh-rgb/tankionline/internal/config"
 	"github.com/sundabaoh-rgb/tankionline/internal/httpserver"
 	"github.com/sundabaoh-rgb/tankionline/internal/logger"
+	"github.com/sundabaoh-rgb/tankionline/internal/match"
 	"github.com/sundabaoh-rgb/tankionline/internal/room"
 	"github.com/sundabaoh-rgb/tankionline/internal/storage/postgres"
+	"github.com/sundabaoh-rgb/tankionline/internal/ws"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -73,6 +75,9 @@ func main() {
 	roomRepo := postgres.NewRoomRepo(pool)
 	roomPlayersRepo := postgres.NewRoomPlayersRepo(pool)
 
+	battleRepo := postgres.NewBattleRepo(pool)
+	battleStatsRepo := postgres.NewBattleStatsRepo(pool)
+
 	// --- Token manager (in-memory) ---
 	tokenManager := auth.NewMemoryTokenManager()
 
@@ -83,7 +88,10 @@ func main() {
 	authService := auth.NewService(userRepo, tokenManager, passwordHasher, logg)
 
 	roomService := room.NewService(roomRepo, roomPlayersRepo, logg)
+	matchService := match.NewService(battleRepo, battleStatsRepo, logg)
 
+	wsHub := ws.NewHub(logg)
+	go wsHub.Run()
 	// -----------------------------------------------------------------------------
 	// HTTP SERVER + ROUTES
 	// -----------------------------------------------------------------------------
@@ -92,6 +100,8 @@ func main() {
 		logg,
 		authService,
 		roomService,
+		matchService,
+		wsHub,
 	)
 
 	go func() {

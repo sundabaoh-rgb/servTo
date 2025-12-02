@@ -95,22 +95,38 @@ func (s *service) ListRoomPlayers(ctx context.Context, roomID uuid.UUID) ([]Play
 }
 
 func (s *service) JoinRoom(ctx context.Context, roomID, userID uuid.UUID) error {
-	// если уже в ЭТОЙ комнате — ничего не делаем
+	// Проверяем, находится ли пользователь уже в этой комнате
 	inRoom, err := s.players.IsInRoom(ctx, roomID, userID)
 	if err != nil {
 		return err
 	}
 	if inRoom {
-		return nil
+		// Если уже в комнате - ничего не делаем (или возвращаем ошибку)
+		return nil // или return ErrUserAlreadyInRoom
 	}
 
-	// достаём комнату
+	// Проверяем, находится ли пользователь в ЛЮБОЙ другой комнате
+	currentRoom, err := s.players.GetUserRoom(ctx, userID) // Исправлено: передаем userID
+	if err != nil {
+		return err
+	}
+	if currentRoom != nil {
+		// Пользователь уже в другой комнате
+		if *currentRoom == roomID {
+			// Этот случай уже обработан выше, но на всякий случай
+			return nil // или return ErrUserAlreadyInRoom
+		}
+		// Пользователь в другой комнате
+		return errors.New("user is already in another room")
+	}
+
+	// Достаём комнату
 	rm, err := s.repo.GetByID(ctx, roomID)
 	if err != nil {
 		return err
 	}
 
-	// считаем игроков
+	// Считаем игроков
 	count, err := s.players.CountInRoom(ctx, roomID)
 	if err != nil {
 		return err
