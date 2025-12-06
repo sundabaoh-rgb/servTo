@@ -829,3 +829,308 @@ window.addEventListener("beforeunload", () => {
         // тут пофиг, вкладка всё равно умирает
     }
 });
+
+
+
+
+
+
+
+
+
+// ===========================
+// ==== GAME / WS / MAP ======
+// ===========================
+
+// runtime-состояние боя (отдельно от state, чтобы не засорять)
+let gameWS = null;
+const gameInput = {
+  forward: false,
+  backward: false,
+  rotate_left: false,
+  rotate_right: false,
+  shoot: false,
+};
+
+// Подключение к WS /ws/game
+function connectGameWS() {
+  if (!state.currentRoom || !state.accessToken) {
+    return;
+  }
+
+  // Если старый WS висит — убиваем
+  if (gameWS) {
+    try { gameWS.close(); } catch (e) {}
+    gameWS = null;
+  }
+
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  const url = `${proto}://${location.host}/ws/game?room_id=${state.currentRoom}&token=${state.accessToken}`;
+
+  logToUI("🔌 Подключение к полю боя...", "info");
+
+  gameWS = new WebSocket(url);
+
+  gameWS.onopen = () => {
+    logToUI("✅ Соединение с полем боя установлено", "success");
+    sendGameInput(); // сразу отправим нулевой инпут
+  };
+
+  gameWS.onclose = () => {
+    logToUI("⚠️ Соединение с полем боя закрыто", "error");
+    gameWS = null;
+  };
+
+  gameWS.onerror = (e) => {
+    console.log("WS GAME ERROR", e);
+    logToUI("❌ Ошибка WebSocket боя", "error");
+  };
+
+  gameWS.onmessage = handleGameMessage;
+}
+
+function disconnectGameWS() {
+  if (gameWS) {
+    try { gameWS.close(); } catch (e) {}
+    gameWS = null;
+  }
+}
+
+// Обработка сообщений от сервера
+function handleGameMessage(evt) {
+  let msg;
+  try {
+    msg = JSON.parse(evt.data);
+  } catch {
+    return;
+  }
+
+  const type = msg.type || msg.Type;
+  if (type === "state") {
+    const data = msg.data || msg.Data || msg.state || msg.State;
+    if (data) {
+      renderBattleCanvas(data);
+    }
+  }
+}
+
+// Отправка инпута на сервер
+function sendGameInput() {
+  if (!gameWS || gameWS.readyState !== WebSocket.OPEN) return;
+
+  gameWS.send(JSON.stringify({
+    type: "input",
+    input: { ...gameInput },
+  }));
+}
+
+// Обновление инпута по клавишам
+function updateInputKey(code, pressed) {
+  switch (code) {
+    case "KeyW":
+    case "ArrowUp":
+      gameInput.forward = pressed;
+      break;
+    case "KeyS":
+    case "ArrowDown":
+      gameInput.backward = pressed;
+      break;
+    case "KeyA":
+    case "ArrowLeft":
+      gameInput.rotate_left = pressed;
+      break;
+    case "KeyD":
+    case "ArrowRight":
+      gameInput.rotate_right = pressed;
+      break;
+    case "Space":
+      gameInput.shoot = pressed;
+      break;
+    default:
+      return; // не слать лишний раз
+  }
+  sendGameInput();
+}
+
+// Навешиваем глобальные слушатели клавиатуры (кроме инпутов)
+window.addEventListener("keydown", (e) => {
+  const tag = (e.target && e.target.tagName) || "";
+  if (tag === "INPUT" || tag === "TEXTAREA") return;
+  if (e.repeat) return;
+  updateInputKey(e.code, true);
+});
+
+window.addEventListener("keyup", (e) => {
+  const tag = (e.target && e.target.tagName) || "";
+  if (tag === "INPUT" || tag === "TEXTAREA") return;
+  updateInputKey(e.code, false);
+});
+
+// ============================
+// ====== РЕНДЕР КАРТЫ ========
+// ============================
+
+const ARENA_W = 1000;
+const ARENA_H = 1000;
+
+function renderBattleCanvas(snap) {
+  const canvas = document.getElementById("battle-canvas");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width;
+  const h = canvas.height;
+  const scaleX = w / ARENA_W;
+  const scaleY = h / ARENA_H;
+
+  // фон
+  ctx.fillStyle = "#05070d";
+  ctx.fillRect(0, 0, w, h);
+
+  // лёгкая сетка
+  ctx.strokeStyle = "#151b26";
+  ctx.lineWidth = 1;
+  const gridStep = 100;
+  for (let x = 0; x <= ARENA_W; x += gridStep) {
+    ctx.beginPath();
+    ctx.moveTo(x * scaleX, 0);
+    ctx.lineTo(x * scaleX, h);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= ARENA_H; y += gridStep) {
+    ctx.beginPath();
+    ctx.moveTo(0, y * scaleY);
+    ctx.lineTo(w, y * scaleY);
+    ctx.stroke();
+  }
+
+  const players = snap.players || snap.Players || [];
+  const bullets = snap.bullets || snap.Bullets || [];
+
+  const myId = state.currentUser?.id || state.currentUser?.user_id || null;
+
+  // Пули
+  bullets.forEach((b) => {
+    const x = b.x || b.X || 0;
+    const y = b.y || b.Y || 0;
+
+    ctx.beginPath();
+    ctx.arc(x * scaleX, y * scaleY, 3, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffb84a";
+    ctx.fill();
+  });
+
+  // Танки
+  players.forEach((p) => {
+    const id = p.id || p.ID;
+    const x = p.x || p.X || 0;
+    const y = p.y || p.Y || 0;
+    const angle = p.angle || p.Angle || 0;
+    const hp = p.hp ?? p.HP ?? 0;
+
+    const screenX = x * scaleX;
+    const screenY = y * scaleY;
+
+    const isMe = myId && String(id) === String(myId);
+
+    const bodyWidth = 24;
+    const bodyHeight = 32;
+
+    // тело
+    ctx.save();
+    ctx.translate(screenX, screenY);
+    ctx.rotate(angle);
+
+    ctx.fillStyle = isMe ? "#4cd137" : "#95a5a6";
+    ctx.fillRect(-bodyWidth / 2, -bodyHeight / 2, bodyWidth, bodyHeight);
+
+    // башня/ствол
+    ctx.fillStyle = isMe ? "#dcdde1" : "#ecf0f1";
+    ctx.fillRect(-4, -bodyHeight / 2 - 8, 8, 16);
+
+    ctx.restore();
+
+    // хп-бар
+    const hpPerc = Math.max(0, Math.min(1, hp / 100));
+    const barW = 30;
+    const barH = 4;
+
+    ctx.fillStyle = "#2c3e50";
+    ctx.fillRect(screenX - barW / 2, screenY - bodyHeight, barW, barH);
+
+    ctx.fillStyle = hpPerc > 0.5 ? "#2ecc71" : "#e74c3c";
+    ctx.fillRect(screenX - barW / 2, screenY - bodyHeight, barW * hpPerc, barH);
+  });
+
+  // рамка
+  ctx.strokeStyle = "#2f3640";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(0, 0, w, h);
+}
+
+// ============================
+// ПЕРЕОПРЕДЕЛЯЕМ join/leave,
+// чтобы поднимать/убивать WS
+// ============================
+
+// joinSelectedRoom с подключением WS
+async function joinSelectedRoom() {
+  if (!state.selectedRoom) {
+    logToUI("❌ Выберите поле боя для присоединения", "error");
+    return;
+  }
+  if (state.currentRoom) {
+    logToUI("❌ Вы уже находитесь на поле боя", "error");
+    return;
+  }
+  const room = state.selectedRoom;
+  const playerCount = state.roomPlayers.length;
+  const maxPlayers = room.max_players;
+
+  if (playerCount >= maxPlayers) {
+    logToUI("❌ Поле боя заполнено", "error");
+    return;
+  }
+
+  try {
+    logToUI(` Вход на поле боя "${room.name}"...`, "info");
+    await api(`/rooms/${room.id}/join`, { method: "POST", headers: authHeaders() });
+    state.currentRoom = room.id;
+    logToUI(`✅ Вы вступили на поле боя "${room.name}"`, "success");
+
+    await Promise.all([loadRooms(), loadRoomPlayers(room)]);
+    updateUserStatus();
+
+    // 🔌 после успешного join — подключаем WS
+    connectGameWS();
+  } catch (err) {
+    logToUI(`❌ Ошибка входа: ${err.message}`, "error");
+  }
+}
+
+// leaveCurrentRoom с отключением WS
+async function leaveCurrentRoom() {
+  if (!state.currentRoom) {
+    logToUI("❌ Вы не находитесь на поле боя", "error");
+    return;
+  }
+
+  try {
+    const room = state.rooms.find(r => r.id === state.currentRoom) || state.selectedRoom;
+    const roomName = room?.name || "неизвестное";
+
+    logToUI(` Выход с поля боя "${roomName}"...`, "info");
+    await api(`/rooms/${state.currentRoom}/leave`, { method: "POST", headers: authHeaders() });
+
+    state.currentRoom = null;
+    logToUI(`Вы покинули поле боя "${roomName}"`, "info");
+
+    await Promise.all([loadRooms(), loadRoomPlayers(room)]);
+    updateUserStatus();
+
+    // ❌ рубим WS
+    disconnectGameWS();
+  } catch (err) {
+    logToUI(`❌ Ошибка выхода: ${err.message}`, "error");
+  }
+}

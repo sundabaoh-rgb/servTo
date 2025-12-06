@@ -5,6 +5,26 @@
     box-sizing: border-box;
 }
 
+.battle-canvas-wrapper {
+  margin-top: 12px;
+  padding: 8px;
+  background: radial-gradient(circle at top, #1f2933 0, #050813 60%, #000 100%);
+  border-radius: 8px;
+  border: 1px solid #202833;
+  box-shadow: 0 0 15px rgba(0,0,0,0.6);
+}
+
+#battle-canvas {
+  width: 100%;
+  max-width: 640px;
+  display: block;
+  margin: 0 auto;
+  background: #05070d;
+  border-radius: 6px;
+  border: 1px solid #111822;
+}
+
+
 html {
     font-size: 14px;
 }

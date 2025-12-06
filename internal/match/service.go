@@ -32,28 +32,43 @@ func NewService(battleRepo battle.Repository, hub *ws.Hub, log logger.Logger) *S
 	}
 }
 
-// раньше у тебя уже была EnsureBattleRunning(ctx, roomID, durationMinutes)
-// просто чуть допилим, чтобы она создавала Match и стартовала Run
 func (s *Service) EnsureBattleRunning(ctx context.Context, roomID uuid.UUID, durationMinutes int) (*Match, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// 1. ищем активную битву в репо
+	// 1. Пытаемся найти активную битву в БД
 	b, err := s.battles.GetActiveByRoom(ctx, roomID)
 	if err != nil {
-		return nil, err
+		// Считаем, что это "битвы нет" и создаём новую
+		s.log.Info("match_service: no active battle for room, creating new",
+			"room_id", roomID,
+			"err", err,
+		)
+
+		// 1.1. Создаём доменную битву
+		b, err = domain.NewBattle(roomID, durationMinutes)
+		if err != nil {
+			return nil, err
+		}
+
+		// 1.2. Сохраняем в репо
+		if err := s.battles.Create(ctx, b); err != nil {
+			return nil, err
+		}
 	}
 
-	// если матчи уже есть — возвр
-	if m, ok := s.matches[b.ID()]; ok {
+	battleID := b.ID()
+
+	// 2. Если матч уже есть в памяти — просто возвращаем
+	if m, ok := s.matches[battleID]; ok {
 		return m, nil
 	}
 
-	// 2. если матча нет — создаём
-	m := NewMatch(b.ID(), s.hub, s.log)
-	s.matches[b.ID()] = m
+	// 3. Нет матча — создаём
+	m := NewMatch(battleID, s.hub, s.log)
+	s.matches[battleID] = m
 
-	// запускаем цикл в отдельной горутине
+	// 4. Запускаем игровой цикл
 	go m.Run(ctx)
 
 	return m, nil
