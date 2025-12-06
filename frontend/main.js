@@ -78,9 +78,9 @@ async function api(path, options = {}) {
 
 function renderSession() {
     document.getElementById("access-token").textContent = 
-        state.accessToken ? state.accessToken.slice(0, 12) + "..." : "Не авторизован";
+        state.accessToken ? state.accessToken: "Не авторизован";
     document.getElementById("refresh-token").textContent = 
-        state.refreshToken ? state.refreshToken.slice(0, 12) + "..." : "Не авторизован";
+        state.refreshToken ? state.refreshToken : "Не авторизован";
     document.getElementById("current-user").textContent = 
         state.currentUser?.nickname || "Гость";
     

@@ -15,7 +15,6 @@ func (s *Server) setupRouter() {
 	// Инициализация хендлеров
 	authHandler := handlers.NewAuthHandler(s.authService)
 	roomHandler := handlers.NewRoomHandler(s.roomService)
-	debugHandlers := handlers.NewDebugHandler(s.matchService)
 
 	// API Routes
 	s.mux.Route("/api/v1", func(r chi.Router) {
@@ -24,8 +23,6 @@ func (s *Server) setupRouter() {
 			public.Post("/register", authHandler.Register)
 			public.Post("/login", authHandler.Login)
 			public.Post("/refresh", authHandler.Refresh)
-
-			r.Post("/debug/battles/start", debugHandlers.StartBattle)
 
 		})
 

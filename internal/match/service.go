@@ -5,69 +5,86 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+
 	"github.com/sundabaoh-rgb/tankionline/internal/battle"
 	"github.com/sundabaoh-rgb/tankionline/internal/domain"
 	"github.com/sundabaoh-rgb/tankionline/internal/logger"
+	"github.com/sundabaoh-rgb/tankionline/internal/ws"
 )
 
-type Match struct {
-	Battle *domain.Battle
-	// позже: состояние игроков, пуль и т.п.
-}
-
 type Service struct {
-	mu      sync.RWMutex
-	matches map[uuid.UUID]*Match // battleID -> match
+	log logger.Logger
 
 	battles battle.Repository
-	stats   battle.StatsRepository
-	log     logger.Logger
+
+	hub *ws.Hub
+
+	mu      sync.Mutex
+	matches map[uuid.UUID]*Match
 }
 
-func NewService(
-	battles battle.Repository,
-	stats battle.StatsRepository,
-	log logger.Logger,
-) *Service {
+func NewService(battleRepo battle.Repository, hub *ws.Hub, log logger.Logger) *Service {
 	return &Service{
-		matches: make(map[uuid.UUID]*Match),
-		battles: battles,
-		stats:   stats,
 		log:     log.Named("match_service"),
+		battles: battleRepo,
+		hub:     hub,
+		matches: make(map[uuid.UUID]*Match),
 	}
 }
 
-// EnsureBattleRunning либо возвращает уже запущенный матч,
-// либо создаёт новый battle + match.
-func (s *Service) EnsureBattleRunning(ctx context.Context, roomID uuid.UUID, roomDurationMinutes int) (*Match, error) {
-	// 1. ищем активную битву по комнате
+// раньше у тебя уже была EnsureBattleRunning(ctx, roomID, durationMinutes)
+// просто чуть допилим, чтобы она создавала Match и стартовала Run
+func (s *Service) EnsureBattleRunning(ctx context.Context, roomID uuid.UUID, durationMinutes int) (*Match, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// 1. ищем активную битву в репо
 	b, err := s.battles.GetActiveByRoom(ctx, roomID)
 	if err != nil {
 		return nil, err
 	}
 
-	if b == nil {
-		// 2. создаём новую битву
-		b, err = domain.NewBattle(roomID, roomDurationMinutes)
-		if err != nil {
-			return nil, err
-		}
-		if err := s.battles.Create(ctx, b); err != nil {
-			return nil, err
-		}
-	}
-
-	// 3. достаём/создаём Match в памяти
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	m, ok := s.matches[b.ID()]
-	if ok {
+	// если матчи уже есть — возвр
+	if m, ok := s.matches[b.ID()]; ok {
 		return m, nil
 	}
 
-	m = &Match{Battle: b}
+	// 2. если матча нет — создаём
+	m := NewMatch(b.ID(), s.hub, s.log)
 	s.matches[b.ID()] = m
 
+	// запускаем цикл в отдельной горутине
+	go m.Run(ctx)
+
 	return m, nil
+}
+
+func (s *Service) AddPlayer(ctx context.Context, battleID, userID uuid.UUID) {
+	s.mu.Lock()
+	m := s.matches[battleID]
+	s.mu.Unlock()
+	if m == nil {
+		return
+	}
+	m.AddPlayer(userID)
+}
+
+func (s *Service) RemovePlayer(battleID, userID uuid.UUID) {
+	s.mu.Lock()
+	m := s.matches[battleID]
+	s.mu.Unlock()
+	if m == nil {
+		return
+	}
+	m.RemovePlayer(userID)
+}
+
+func (s *Service) HandleInput(battleID, userID uuid.UUID, in domain.PlayerInput) {
+	s.mu.Lock()
+	m := s.matches[battleID]
+	s.mu.Unlock()
+	if m == nil {
+		return
+	}
+	m.SetInput(userID, in)
 }

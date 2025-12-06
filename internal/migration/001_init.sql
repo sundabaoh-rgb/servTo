@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS room_players (
 CREATE INDEX IF NOT EXISTS idx_room_players_user_id ON room_players(user_id);
 CREATE INDEX IF NOT EXISTS idx_room_players_joined_at ON room_players(joined_at);
 
---todo триггер потом либо перенесу либо хабь. хуй, посмотрим
+--todo триггер потом либо перенесу либо забью хуй, посмотрим
 -- CREATE OR REPLACE FUNCTION update_user_stats()
 -- RETURNS TRIGGER AS $$
 -- BEGIN

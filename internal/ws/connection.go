@@ -27,21 +27,35 @@ type ClientMessage struct {
 	Input *domain.PlayerInput `json:"input,omitempty"`
 }
 
+type InputHandler func(battleID, userID uuid.UUID, in domain.PlayerInput)
+type DisconnectHandler func(battleID, userID uuid.UUID)
+
 type Connection struct {
 	hub      *Hub
 	conn     *websocket.Conn
 	send     chan []byte
 	battleID uuid.UUID
 	userID   uuid.UUID
+
+	onInput      InputHandler
+	onDisconnect DisconnectHandler
 }
 
-func NewConnection(h *Hub, wsConn *websocket.Conn, battleID, userID uuid.UUID) *Connection {
+func NewConnection(
+	h *Hub,
+	wsConn *websocket.Conn,
+	battleID, userID uuid.UUID,
+	onInput InputHandler,
+	onDisconnect DisconnectHandler,
+) *Connection {
 	return &Connection{
-		hub:      h,
-		conn:     wsConn,
-		send:     make(chan []byte, 256),
-		battleID: battleID,
-		userID:   userID,
+		hub:          h,
+		conn:         wsConn,
+		send:         make(chan []byte, 256),
+		battleID:     battleID,
+		userID:       userID,
+		onInput:      onInput,
+		onDisconnect: onDisconnect,
 	}
 }
 
@@ -59,6 +73,9 @@ func (c *Connection) Run(ctx context.Context) {
 func (c *Connection) readPump(ctx context.Context) {
 	defer func() {
 		c.hub.unregister <- c
+		if c.onDisconnect != nil {
+			c.onDisconnect(c.battleID, c.userID)
+		}
 		c.Close()
 	}()
 
@@ -85,6 +102,10 @@ func (c *Connection) readPump(ctx context.Context) {
 		var msg ClientMessage
 		if err := json.Unmarshal(message, &msg); err != nil {
 			continue
+		}
+
+		if msg.Type == "input" && msg.Input != nil && c.onInput != nil {
+			c.onInput(c.battleID, c.userID, *msg.Input)
 		}
 
 		// TODO: дальше сюда воткнём прокидку в MatchService

@@ -105,3 +105,10 @@ func (h *Hub) sendToBattle(msg Broadcast) {
 func (h *Hub) Register(c *Connection) {
 	h.register <- c
 }
+
+func (h *Hub) BroadcastState(battleID uuid.UUID, data []byte) {
+	h.broadcast <- Broadcast{
+		BattleID: battleID,
+		Data:     data,
+	}
+}

@@ -76,7 +76,7 @@ func main() {
 	roomPlayersRepo := postgres.NewRoomPlayersRepo(pool)
 
 	battleRepo := postgres.NewBattleRepo(pool)
-	battleStatsRepo := postgres.NewBattleStatsRepo(pool)
+	//battleStatsRepo := postgres.NewBattleStatsRepo(pool)
 
 	// --- Token manager (in-memory) ---
 	tokenManager := auth.NewMemoryTokenManager()
@@ -88,10 +88,11 @@ func main() {
 	authService := auth.NewService(userRepo, tokenManager, passwordHasher, logg)
 
 	roomService := room.NewService(roomRepo, roomPlayersRepo, logg)
-	matchService := match.NewService(battleRepo, battleStatsRepo, logg)
 
 	wsHub := ws.NewHub(logg)
 	go wsHub.Run()
+
+	matchService := match.NewService(battleRepo, wsHub, logg)
 	// -----------------------------------------------------------------------------
 	// HTTP SERVER + ROUTES
 	// -----------------------------------------------------------------------------
