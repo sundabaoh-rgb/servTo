@@ -160,31 +160,6 @@ async function handleLogout() {
 async function loadRooms() {
   if (!state.accessToken) return;
 
-  // Показываем колесико загрузки вместо текста
-  const msgElement = document.getElementById("rooms-msg");
-  msgElement.innerHTML = `
-    <div style="
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      color: #4CAF50;
-      font-size: 13px;
-      font-weight: 500;
-    ">
-      <div style="
-        width: 14px;
-        height: 14px;
-        border: 2px solid rgba(76, 175, 80, 0.2);
-        border-top: 2px solid #4CAF50;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-      "></div>
-      Обновление списка...
-    </div>
-  `;
-  msgElement.className = "panel-msg info";
-
   try {
     const res = await api("/rooms", { headers: authHeaders() });
     const baseRooms = res.data || [];
@@ -211,25 +186,7 @@ async function loadRooms() {
     if (summary) {
       summary.textContent = `Комнат: ${state.rooms.length}`;
     }
-
-    // Очищаем сообщение
-    msgElement.innerHTML = '';
-    msgElement.className = "panel-msg";
   } catch (err) {
-    // В случае ошибки показываем текст с иконкой
-    msgElement.innerHTML = `
-      <div style="
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        color: #F44336;
-      ">
-        <i class="fas fa-exclamation-circle"></i>
-        Ошибка загрузки: ${err.message}
-      </div>
-    `;
-    msgElement.className = "panel-msg error";
   }
 }
 
@@ -550,3 +507,117 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }, 5000);
 });
+
+const infoView   = document.getElementById('battleinfo-view-info');
+const createView = document.getElementById('battleinfo-view-create');
+
+document.getElementById('btn-open-create-room').onclick = () => {
+  infoView.classList.add('hidden');
+  createView.classList.remove('hidden');
+};
+
+document.getElementById('btn-cancel-create-room').onclick = () => {
+  createView.classList.add('hidden');
+  infoView.classList.remove('hidden');
+};
+
+// ========================
+//  СОЗДАНИЕ БИТВЫ (НОВОЕ ЛОББИ, СТАРЫЙ БЭКЕНД)
+// ========================
+(function initCreateRoomUI() {
+  const infoView   = document.getElementById("battleinfo-view-info");
+  const createView = document.getElementById("battleinfo-view-create");
+
+  const btnOpenCreate   = document.getElementById("btn-open-create-room");
+  const btnCancelCreate = document.getElementById("btn-cancel-create-room");
+  const createForm      = document.getElementById("create-room-form");
+  const battleMsgEl     = document.getElementById("battle-msg");
+
+  if (!infoView || !createView || !btnOpenCreate || !btnCancelCreate || !createForm) {
+    return;
+  }
+
+  function showBattleMsg(text, type = "info") {
+    if (!battleMsgEl) return;
+    battleMsgEl.textContent = text;
+    battleMsgEl.className = "panel-msg";
+    if (type === "success") battleMsgEl.classList.add("text-success");
+    if (type === "error")   battleMsgEl.classList.add("text-danger");
+    if (type === "warning") battleMsgEl.classList.add("text-warning");
+  }
+
+  function switchToCreateView() {
+    infoView.classList.add("hidden");
+    createView.classList.remove("hidden");
+    showBattleMsg("");
+  }
+
+  function switchToInfoView() {
+    createView.classList.add("hidden");
+    infoView.classList.remove("hidden");
+  }
+
+  // открыть форму создания
+  btnOpenCreate.addEventListener("click", (e) => {
+    e.preventDefault();
+    switchToCreateView();
+  });
+
+  // отмена
+  btnCancelCreate.addEventListener("click", (e) => {
+    e.preventDefault();
+    switchToInfoView();
+  });
+
+  // сабмит формы -> /api/v1/rooms
+  createForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    if (!state.accessToken) {
+      showBattleMsg("❌ Для создания битвы нужно войти", "error");
+      return;
+    }
+
+    if (state.currentRoom) {
+      showBattleMsg("❌ Сначала покиньте текущую битву", "error");
+      return;
+    }
+
+    const fd = new FormData(createForm);
+    const body = {
+      name:            fd.get("name").trim(),
+      max_players:     Number(fd.get("max_players")),
+      duration_minutes:Number(fd.get("duration_minutes")),
+      gold_per_kill:   Number(fd.get("gold_per_kill")),
+      fund_modifier:   Number(fd.get("fund_modifier"))
+    };
+
+    if (!body.name) {
+      showBattleMsg("❌ Название битвы не может быть пустым", "error");
+      return;
+    }
+
+    showBattleMsg("🔄 Создание битвы...", "info");
+
+    try {
+      await api("/rooms", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify(body)
+      });
+
+      // обновляем список комнат
+      await loadRooms();
+
+      showBattleMsg("✅ Битва создана!", "success");
+
+      createForm.reset();
+      switchToInfoView();
+
+      // по-хорошему ещё выбрать созданную комнату — если бэк возвращает её id,
+      // можно доработать: сначала получить res = await api(...), потом res.data.id
+    } catch (err) {
+      showBattleMsg(`❌ Ошибка создания: ${err.message}`, "error");
+    }
+  });
+})();

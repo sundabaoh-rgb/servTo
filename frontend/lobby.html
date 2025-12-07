@@ -13,12 +13,11 @@
   <!-- ВЕРХНЕЕ МЕНЮ -->
   <header class="lobby-topbar">
     <div class="topbar-left">
-      <span class="logo">Tanki Online</span>
+      <span class="logo">Tanki <span>Online</span></span>
       <span class="logo-sub">Лобби</span>
     </div>
 
     <div class="topbar-center">
-      <!-- Если потом будут другие вкладки, сюда добавим -->
       <button class="topbar-tab active">
         <i class="fas fa-crosshairs"></i>
         Битвы
@@ -47,7 +46,7 @@
         <span><i class="fas fa-comments"></i> Чат</span>
       </div>
       <div id="chat-messages" class="chat-messages">
-        <!-- позже сюда придёт реальный чат; сейчас — заглушка -->
+        <!-- сообщения чата -->
       </div>
       <form id="chat-form" class="chat-input-row">
         <input id="chat-input" type="text" placeholder="Написать в чат..." autocomplete="off" />
@@ -60,9 +59,12 @@
     <!-- ЦЕНТР: СПИСОК БИТВ / КОМНАТ -->
     <section class="panel battles-panel">
       <div class="panel-header">
-        <span><i class="fas fa-list"></i> Список битв</span>
+        <div class="panel-header-left">
+          <i class="fas fa-list"></i>
+          <span>Список битв</span>
+        </div>
         <div class="panel-header-actions">
-          <button id="btn-refresh-rooms" class="btn btn-small">
+          <button id="btn-refresh-rooms" class="btn btn-small" title="Обновить список">
             <i class="fas fa-sync-alt"></i>
           </button>
         </div>
@@ -90,60 +92,151 @@
         </table>
       </div>
 
+      <!-- НИЖНЯЯ ПАНЕЛЬ ПОД КОМНАТАМИ -->
+      <div class="battles-footer">
+        <!-- слева: создать битву -->
+        <button id="btn-open-create-room" class="btn btn-create-room">
+          <i class="fas fa-plus-circle"></i>
+          <span>Создать битву</span>
+        </button>
+
+        <!-- справа: иконки режимов / типов битв (на будущее) -->
+        <div class="battle-modes">
+          <button class="battle-mode-btn active" data-mode="dm" title="Deathmatch">
+            <i class="fas fa-crosshairs"></i>
+          </button>
+          <button class="battle-mode-btn" data-mode="ctf" title="CTF">
+            <i class="fas fa-flag"></i>
+          </button>
+          <button class="battle-mode-btn" data-mode="cp" title="Control Points">
+            <i class="fas fa-bullseye"></i>
+          </button>
+          <button class="battle-mode-btn" data-mode="parkour" title="Паркур">
+            <i class="fas fa-mountain"></i>
+          </button>
+        </div>
+      </div>
+
       <div id="rooms-msg" class="panel-msg"></div>
     </section>
 
-    <!-- ПРАВАЯ КОЛОНКА: ИНФА О БИТВЕ -->
+    <!-- ПРАВАЯ КОЛОНКА: ИНФА О БИТВЕ / СОЗДАНИЕ БИТВЫ -->
     <section class="panel battleinfo-panel">
       <div class="panel-header">
         <span><i class="fas fa-info-circle"></i> Информация о битве</span>
       </div>
 
-      <!-- Превью карты -->
-      <div class="room-preview">
-        <div class="room-preview-inner">
-          <span id="room-preview-name" class="room-preview-name">Выберите битву</span>
-          <span id="room-preview-mode" class="room-preview-mode">Режим: DM</span>
+      <!-- ВИД "ИНФА О БИТВЕ" -->
+      <div id="battleinfo-view-info" class="battleinfo-view active">
+        <!-- Превью карты -->
+        <div class="room-preview">
+          <div class="room-preview-inner">
+            <span id="room-preview-name" class="room-preview-name">Выберите битву</span>
+            <span id="room-preview-mode" class="room-preview-mode">Режим: DM</span>
+          </div>
+        </div>
+
+        <!-- Основная инфа -->
+        <div class="room-info-main">
+          <div class="room-info-row">
+            <span class="label">Название:</span>
+            <span id="room-info-title" class="value">—</span>
+          </div>
+          <div class="room-info-row">
+            <span class="label">Игроки:</span>
+            <span id="room-info-players" class="value">0/0</span>
+          </div>
+          <div class="room-info-row">
+            <span class="label">Время:</span>
+            <span id="room-info-time" class="value">—</span>
+          </div>
+          <div class="room-info-row">
+            <span class="label">Награда:</span>
+            <span id="room-info-reward" class="value">—</span>
+          </div>
+        </div>
+
+        <!-- Игроки в комнате -->
+        <div class="room-players-box">
+          <div class="room-players-header">
+            <span><i class="fas fa-users"></i> Участники</span>
+          </div>
+          <ul id="room-players-list" class="room-players-list">
+            <!-- список игроков -->
+          </ul>
+        </div>
+
+        <!-- Кнопка "Играть" / "Покинуть" -->
+        <div class="battleinfo-footer">
+          <button id="btn-join-leave" class="btn btn-green full-width">
+            <i class="fas fa-play"></i>
+            <span>ВСТУПИТЬ В БИТВУ</span>
+          </button>
         </div>
       </div>
 
-      <!-- Основная инфа -->
-      <div class="room-info-main">
-        <div class="room-info-row">
-          <span class="label">Название:</span>
-          <span id="room-info-title" class="value">—</span>
-        </div>
-        <div class="room-info-row">
-          <span class="label">Игроки:</span>
-          <span id="room-info-players" class="value">0/0</span>
-        </div>
-        <div class="room-info-row">
-          <span class="label">Время:</span>
-          <span id="room-info-time" class="value">—</span>
-        </div>
-        <div class="room-info-row">
-          <span class="label">Награда:</span>
-          <span id="room-info-reward" class="value">—</span>
-        </div>
-      </div>
+      <!-- ВИД "СОЗДАНИЕ БИТВЫ" -->
+      <!-- ВИД "СОЗДАНИЕ БИТВЫ" -->
+<div id="battleinfo-view-create" class="battleinfo-view hidden">
+  <div class="create-room-header">
+    <h3>Создание битвы</h3>
+    <p>Настрой параметры комнаты и запусти бой.</p>
+  </div>
 
-      <!-- Игроки в комнате -->
-      <div class="room-players-box">
-        <div class="room-players-header">
-          <span><i class="fas fa-users"></i> Участники</span>
-        </div>
-        <ul id="room-players-list" class="room-players-list">
-          <!-- сюда — список игроков -->
-        </ul>
-      </div>
+  <form id="create-room-form" class="create-room-form">
+    <div class="form-row">
+      <label for="create-room-name">Название битвы</label>
+      <input id="create-room-name" name="name" type="text"
+             placeholder="Например: DM на мосту" required minlength="3" maxlength="32" />
+    </div>
 
-      <!-- Кнопка "Играть" / "Покинуть" -->
-      <div class="battleinfo-footer">
-        <button id="btn-join-leave" class="btn btn-green full-width">
-          <i class="fas fa-play"></i>
-          <span>ВСТУПИТЬ В БИТВУ</span>
-        </button>
+    <div class="form-row">
+      <label for="create-room-mode">Режим (пока только в UI)</label>
+      <select id="create-room-mode" name="mode">
+        <option value="dm">Deathmatch</option>
+        <option value="ctf">Захват флага</option>
+        <option value="cp">Контроль точек</option>
+        <option value="parkour">Паркур</option>
+      </select>
+    </div>
+
+    <div class="form-row form-row-inline">
+      <div class="form-col">
+        <label for="create-room-max-players">Игроков, макс</label>
+        <input id="create-room-max-players" name="max_players" type="number"
+               min="2" max="16" value="8" />
       </div>
+      <div class="form-col">
+        <label for="create-room-duration">Время (мин)</label>
+        <input id="create-room-duration" name="duration_minutes" type="number"
+               min="5" max="60" value="15" />
+      </div>
+    </div>
+
+    <div class="form-row form-row-inline">
+      <div class="form-col">
+        <label for="create-room-gpk">Награда за килл</label>
+        <input id="create-room-gpk" name="gold_per_kill" type="number" min="0" value="10" />
+      </div>
+      <div class="form-col">
+        <label for="create-room-fund-mod">Модификатор фонда (x)</label>
+        <input id="create-room-fund-mod" name="fund_modifier" type="number" step="0.1" min="0" value="1" />
+      </div>
+    </div>
+
+    <div class="form-row form-row-buttons">
+      <button type="submit" id="btn-create-room" class="btn btn-green full-width">
+        <i class="fas fa-check"></i>
+        <span>Создать битву</span>
+      </button>
+      <button type="button" id="btn-cancel-create-room" class="btn btn-outline full-width">
+        <i class="fas fa-times"></i>
+        <span>Отмена</span>
+      </button>
+    </div>
+  </form>
+</div>
+
 
       <div id="battle-msg" class="panel-msg"></div>
     </section>
