@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tanki | Битва</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+<div id="app" class="game-app">
+  <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+  <header class="lobby-topbar game-topbar">
+    <div class="topbar-left">
+      <span class="logo">Tanki Online</span>
+      <span class="logo-sub">Боевая зона</span>
+    </div>
+
+    <div class="topbar-center">
+      <span id="game-room-name" class="game-room-name">Комната #?</span>
+      <span id="game-room-timer" class="game-room-timer">
+        <i class="fas fa-clock"></i> --
+      </span>
+    </div>
+
+    <div class="topbar-right">
+      <span id="game-username" class="top-username">
+        <i class="fas fa-user"></i> ...
+      </span>
+      <button id="btn-exit-to-lobby" class="btn btn-outline btn-logout">
+        <i class="fas fa-door-open"></i> В лобби
+      </button>
+    </div>
+  </header>
+
+  <main class="game-layout">
+    <!-- ЛЕВО: КАРТА / ИГРА -->
+    <section class="game-panel">
+      <canvas id="game-canvas" width="900" height="540"></canvas>
+
+      <div class="game-hud">
+        <div class="hud-block">
+          <span class="hud-label">HP</span>
+          <div class="hud-bar">
+            <div id="hud-hp-bar" class="hud-bar-fill"></div>
+          </div>
+        </div>
+        <div class="hud-block">
+          <span class="hud-label">Скорость</span>
+          <span id="hud-speed" class="hud-value">0</span>
+        </div>
+        <div class="hud-block">
+          <span class="hud-label">Пинг</span>
+          <span id="hud-ping" class="hud-value">--</span>
+        </div>
+      </div>
+
+      <div class="game-controls-hint">
+        WASD / стрелки — движение,  
+        Пробел — выстрел (пока заглушка), Esc — выйти в лобби.
+      </div>
+
+      <div id="game-msg" class="panel-msg"></div>
+    </section>
+
+    <!-- ПРАВО: ИНФА О БИТВЕ / ИГРОКИ -->
+    <section class="panel game-sidebar">
+      <div class="panel-header">
+        <span><i class="fas fa-info-circle"></i> Информация о битве</span>
+      </div>
+
+      <div class="room-info-main">
+        <div class="room-info-row">
+          <span class="label">Комната:</span>
+          <span id="info-room-title" class="value">—</span>
+        </div>
+        <div class="room-info-row">
+          <span class="label">Игроки:</span>
+          <span id="info-room-players" class="value">0/0</span>
+        </div>
+        <div class="room-info-row">
+          <span class="label">Время:</span>
+          <span id="info-room-time" class="value">—</span>
+        </div>
+        <div class="room-info-row">
+          <span class="label">Награда:</span>
+          <span id="info-room-reward" class="value">—</span>
+        </div>
+      </div>
+
+      <div class="room-players-box">
+        <div class="room-players-header">
+          <span><i class="fas fa-users"></i> Участники</span>
+        </div>
+        <ul id="game-players-list" class="room-players-list">
+          <li class="room-player-empty">
+            Игроки будут отображаться здесь
+          </li>
+        </ul>
+      </div>
+
+      <div class="battleinfo-footer">
+        <button id="btn-leave-room" class="btn btn-red full-width">
+          <i class="fas fa-flag-checkered"></i>
+          <span>Покинуть бой</span>
+        </button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="js/game.js"></script>
+</body>
+</html>

@@ -3,6 +3,7 @@ package match
 import (
 	"context"
 	"encoding/json"
+	"math"
 	"sync"
 	"time"
 
@@ -18,8 +19,12 @@ type PlayerState struct {
 	UserID uuid.UUID
 	X      float64
 	Y      float64
-	VelX   float64
-	VelY   float64
+
+	VelX float64
+	VelY float64
+
+	// перезарядка между выстрелами, в секундах
+	ShootCooldown float64
 }
 
 // что мы храним про нажатые кнопки
@@ -28,6 +33,7 @@ type InputState struct {
 	Down  bool
 	Left  bool
 	Right bool
+	Shoot bool
 }
 
 // то, что отсылаем клиенту
@@ -37,8 +43,27 @@ type PlayerView struct {
 	Y  float64 `json:"y"`
 }
 
+// внутренняя пуля
+type BulletState struct {
+	ID      uuid.UUID
+	OwnerID uuid.UUID
+	X       float64
+	Y       float64
+	VelX    float64
+	VelY    float64
+	TTL     float64 // сколько секунд ещё живёт
+}
+
+// то, что летит клиенту
+type BulletView struct {
+	ID string  `json:"id"`
+	X  float64 `json:"x"`
+	Y  float64 `json:"y"`
+}
+
 type StateSnapshot struct {
 	Players []PlayerView `json:"players"`
+	Bullets []BulletView `json:"bullets,omitempty"`
 }
 
 // один матч (одна битва)
@@ -51,6 +76,7 @@ type Match struct {
 	mu      sync.Mutex
 	players map[uuid.UUID]*PlayerState
 	inputs  map[uuid.UUID]InputState
+	bullets []*BulletState
 
 	tick time.Duration
 }
@@ -63,8 +89,10 @@ func NewMatch(battleID uuid.UUID, hub *ws.Hub, log logger.Logger) *Match {
 		hub:      hub,
 		players:  make(map[uuid.UUID]*PlayerState),
 		inputs:   make(map[uuid.UUID]InputState),
-		tick:     50 * time.Millisecond, // 20 тиков в секунду
+		bullets:  make([]*BulletState, 0),
+		tick:     50 * time.Millisecond,
 	}
+
 }
 
 func (m *Match) Run(ctx context.Context) {
@@ -127,6 +155,7 @@ func (m *Match) SetInput(userID uuid.UUID, in domain.PlayerInput) {
 		Down:  in.Down,
 		Left:  in.Left,
 		Right: in.Right,
+		Shoot: in.Shoot,
 	}
 }
 
@@ -135,12 +164,26 @@ func (m *Match) step(dt float64) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	const speed = 5.0
-	const fieldMin = 0.0
-	const fieldMax = 20.0
+	const (
+		speed        = 3.0  // скорость танка (клеток в секунду)
+		bulletSpeed  = 15.0 // скорость пули
+		bulletTTL    = 2.0  // сколько живёт пуля в секундах
+		fireCooldown = 0.9  // задержка между выстрелами
+		fieldMin     = 0.0
+		fieldMax     = 20.0
+	)
 
+	// --- обновляем игроков и спавним пули ---
 	for id, p := range m.players {
 		in := m.inputs[id]
+
+		// кулдаун выстрела
+		if p.ShootCooldown > 0 {
+			p.ShootCooldown -= dt
+			if p.ShootCooldown < 0 {
+				p.ShootCooldown = 0
+			}
+		}
 
 		vx, vy := 0.0, 0.0
 		if in.Up {
@@ -156,10 +199,21 @@ func (m *Match) step(dt float64) {
 			vx += 1
 		}
 
-		p.X += vx * speed * dt
-		p.Y += vy * speed * dt
+		// нормализуем направление
+		if vx != 0 || vy != 0 {
+			length := math.Hypot(vx, vy)
+			vx /= length
+			vy /= length
 
-		// простые границы
+			// запоминаем скорость (если хочешь где-то использовать)
+			p.VelX = vx * speed
+			p.VelY = vy * (speed * 2)
+
+			p.X += p.VelX * dt
+			p.Y += p.VelY * dt
+		}
+
+		// границы поля
 		if p.X < fieldMin {
 			p.X = fieldMin
 		}
@@ -172,12 +226,76 @@ func (m *Match) step(dt float64) {
 		if p.Y > fieldMax {
 			p.Y = fieldMax
 		}
+
+		// --- выстрел ---
+		// --- выстрел ---
+		if in.Shoot && p.ShootCooldown == 0 {
+			// определяем направление выстрела
+			dirX, dirY := 0.0, 0.0
+
+			// 1) если сейчас жмём направление — стреляем туда
+			if vx != 0 || vy != 0 {
+				dirX, dirY = vx, vy
+			} else if p.VelX != 0 || p.VelY != 0 {
+				// 2) иначе — в сторону последнего движения
+				length := math.Hypot(p.VelX, p.VelY)
+				if length != 0 {
+					dirX = p.VelX / length
+					dirY = p.VelY / length
+				}
+			} else {
+				// 3) вообще никогда не двигался — по дефолту вверх
+				dirX = 0
+				dirY = -1
+			}
+
+			// спавним пулю чуть впереди танка
+			b := &BulletState{
+				ID:      uuid.New(),
+				OwnerID: id,
+				X:       p.X + dirX*0.5,
+				Y:       p.Y + dirY*0.5,
+				VelX:    dirX * bulletSpeed,
+				VelY:    dirY * bulletSpeed,
+				TTL:     bulletTTL,
+			}
+			m.bullets = append(m.bullets, b)
+
+			p.ShootCooldown = fireCooldown
+		}
+
 	}
 
-	// собираем снапшот
+	// --- обновляем пули ---
+	if len(m.bullets) > 0 {
+		alive := m.bullets[:0]
+
+		for _, b := range m.bullets {
+			b.X += b.VelX * dt
+			b.Y += b.VelY * dt
+			b.TTL -= dt
+
+			// умерла — не оставляем
+			if b.TTL <= 0 {
+				continue
+			}
+			if b.X < fieldMin || b.X > fieldMax || b.Y < fieldMin || b.Y > fieldMax {
+				continue
+			}
+
+			// TODO: тут потом будут проверки попаданий
+			alive = append(alive, b)
+		}
+
+		m.bullets = alive
+	}
+
+	// --- собираем снапшот ---
 	snap := StateSnapshot{
 		Players: make([]PlayerView, 0, len(m.players)),
+		Bullets: make([]BulletView, 0, len(m.bullets)),
 	}
+
 	for _, p := range m.players {
 		snap.Players = append(snap.Players, PlayerView{
 			ID: p.UserID.String(),
@@ -186,8 +304,15 @@ func (m *Match) step(dt float64) {
 		})
 	}
 
-	// кодируем и рассылаем через Hub
-	if len(snap.Players) == 0 {
+	for _, b := range m.bullets {
+		snap.Bullets = append(snap.Bullets, BulletView{
+			ID: b.ID.String(),
+			X:  b.X,
+			Y:  b.Y,
+		})
+	}
+
+	if len(snap.Players) == 0 && len(snap.Bullets) == 0 {
 		return
 	}
 

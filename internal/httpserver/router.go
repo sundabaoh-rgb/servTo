@@ -24,6 +24,7 @@ func (s *Server) setupRouter() {
 			public.Post("/login", authHandler.Login)
 			public.Post("/refresh", authHandler.Refresh)
 
+			s.mux.Get("/ws/game", s.handleGameWS)
 		})
 
 		// Protected routes
@@ -35,7 +36,6 @@ func (s *Server) setupRouter() {
 			protected.Post("/logout", authHandler.Logout)
 
 			//battle
-			s.mux.Get("/ws/game", s.handleGameWS)
 
 			// Rooms
 			protected.Get("/rooms", roomHandler.List)

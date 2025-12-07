@@ -1,0 +1,824 @@
+/* ====== BASE ====== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: radial-gradient(circle at top, #3b3f47 0, #050608 55%, #010104 100%);
+  color: #e5e7eb;
+}
+
+/* ==========================
+   AUTH SCREEN (TANKI STYLE)
+   ========================== */
+
+#app {
+  max-width: 960px;
+  margin: 40px auto;
+  padding: 18px 18px 22px;
+  background:
+    radial-gradient(circle at top, rgba(120, 190, 40, 0.22), transparent 55%),
+    #101213;
+  border-radius: 6px;
+  border: 1px solid #363b3f;
+  box-shadow:
+    0 0 0 1px #050607,
+    0 0 40px rgba(0, 0, 0, 0.95);
+}
+
+/* ====== TOPBAR ====== */
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #42484f;
+}
+
+.logo {
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  color: #e4ff4a;
+  text-shadow: 0 0 6px rgba(176, 255, 58, 0.7);
+}
+
+.logo-sub {
+  margin-left: 10px;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.server-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.status-indicator {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #5a5f66;
+  box-shadow: 0 0 0 1px #15181b;
+}
+
+.status-indicator.online {
+  background: #9aff3b;
+  box-shadow: 0 0 10px rgba(154, 255, 59, 0.85);
+}
+
+.status-indicator.offline {
+  background: #ff5252;
+  box-shadow: 0 0 10px rgba(255, 82, 82, 0.8);
+}
+
+.status-text {
+  color: #cbd5f5;
+}
+
+/* ====== AUTH LAYOUT ====== */
+
+.auth-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.6fr);
+  gap: 24px;
+}
+
+.auth-left h1 {
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+  color: #f3f4f6;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: #d1d5db;
+  margin-bottom: 14px;
+}
+
+.auth-benefits {
+  list-style: none;
+  margin-top: 8px;
+}
+
+.auth-benefits li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  color: #a7b0bf;
+}
+
+.auth-benefits i {
+  color: #facc15;
+}
+
+/* ====== AUTH CARD ====== */
+
+.auth-card {
+  background:
+    radial-gradient(circle at top left, rgba(250, 204, 21, 0.18), transparent 60%),
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.18), transparent 55%),
+    #050608;
+  border-radius: 6px;
+  padding: 14px 16px 16px;
+  border: 1px solid #3f444a;
+  box-shadow:
+    0 0 0 1px #050607,
+    0 16px 40px rgba(0, 0, 0, 0.9);
+}
+
+/* ====== AUTH TABS ====== */
+
+.auth-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 3px;
+  border-radius: 999px;
+  background: #111318;
+  border: 1px solid #2b3138;
+}
+
+.tab {
+  flex: 1;
+  border-radius: 999px;
+  padding: 6px 0;
+  font-size: 0.85rem;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tab.active {
+  background: linear-gradient(to bottom, #e4ff4a, #7cab16);
+  color: #111827;
+  font-weight: 600;
+  box-shadow: 0 0 12px rgba(196, 255, 70, 0.8);
+}
+
+/* ====== FORMS ====== */
+
+.form {
+  display: none;
+}
+
+.form.active {
+  display: block;
+}
+
+.form-group {
+  margin-bottom: 10px;
+}
+
+label {
+  display: block;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  margin-bottom: 3px;
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: 4px;
+  border: 1px solid #30353b;
+  background: #05070b;
+  color: #f9fafb;
+  font-size: 0.9rem;
+}
+
+input::placeholder {
+  color: #6b7280;
+}
+
+input:focus {
+  outline: none;
+  border-color: #9aff3b;
+  box-shadow: 0 0 0 1px rgba(154, 255, 59, 0.7);
+}
+
+/* ====== BUTTONS (AUTH) ====== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.05s ease, box-shadow 0.05s ease, filter 0.05s ease;
+}
+
+.btn i {
+  font-size: 0.9rem;
+}
+
+.btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.btn-green {
+  background: linear-gradient(to bottom, #e4ff4a, #7cab16);
+  color: #18181b;
+  box-shadow: 0 10px 24px rgba(196, 255, 70, 0.55);
+}
+
+.btn-purple {
+  background: linear-gradient(to bottom, #60a5fa, #1d4ed8);
+  color: #e5e7eb;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.6);
+}
+
+.btn:hover {
+  filter: brightness(1.05);
+}
+
+.full-width {
+  width: 100%;
+  margin-top: 6px;
+}
+
+/* ====== MESSAGES ====== */
+
+.form-msg {
+  margin-top: 6px;
+  min-height: 16px;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.form-msg.info { color: #e5e7eb; }
+.form-msg.success { color: #bbf7d0; }
+.form-msg.error { color: #fecaca; }
+
+.auth-footer-hint {
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+/* ====== AUTH RESPONSIVE ====== */
+
+@media (max-width: 900px) {
+  #app {
+    margin: 16px;
+    padding: 14px;
+  }
+
+  .auth-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .auth-left {
+    order: 2;
+    margin-top: 10px;
+  }
+
+  .auth-right {
+    order: 1;
+  }
+}
+
+/* =====================
+   LOBBY (TANKI GREEN)
+   ===================== */
+
+.lobby-app {
+  max-width: 1280px;
+  margin: 20px auto;
+  padding: 12px 14px 16px;
+  background:
+    radial-gradient(circle at top, #31352f 0, #070807 55%);
+  border-radius: 6px;
+  border: 1px solid #424740;
+  box-shadow:
+    0 0 0 1px #050607,
+    0 0 45px rgba(0, 0, 0, 0.95);
+  color: #edf5d5;
+  font-size: 13px;
+}
+
+.lobby-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #565d2a;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.lobby-topbar .logo {
+  color: #e4ff4a;
+}
+
+.topbar-center {
+  display: flex;
+  gap: 4px;
+}
+
+.topbar-tab {
+  padding: 3px 9px;
+  border-radius: 4px;
+  border: 1px solid #5c6a27;
+  background: #1b210b;
+  color: #d3e3a5;
+  cursor: default;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.topbar-tab.active {
+  background: linear-gradient(to bottom, #e4ff4a, #7cab16);
+  color: #11130f;
+  box-shadow: 0 0 12px rgba(196, 255, 70, 0.6);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.top-username {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #181f0b;
+  border: 1px solid #5c6a27;
+  color: #f2ffce;
+  font-size: 12px;
+}
+
+.btn-garage {
+  padding: 3px 10px;
+  background: linear-gradient(to bottom, #ffcc66, #c76a14);
+  color: #271406;
+  border-radius: 4px;
+  box-shadow: 0 0 12px rgba(255, 204, 102, 0.6);
+}
+
+.btn-logout {
+  padding: 3px 7px;
+}
+
+/* ====== LOBBY LAYOUT ====== */
+
+.lobby-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.2fr);
+  gap: 8px;
+}
+
+/* ====== PANELS ====== */
+
+.panel {
+  background: #050806;
+  border-radius: 4px;
+  border: 1px solid #434d2a;
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+  box-shadow: inset 0 0 0 1px #12150c;
+}
+
+.panel-header {
+  padding: 3px 7px;
+  background: linear-gradient(to bottom, #333f18, #171e09);
+  border-bottom: 1px solid #576627;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel-header i {
+  color: #e4ff4a;
+  margin-right: 4px;
+}
+
+.panel-subheader {
+  padding: 2px 7px;
+  border-bottom: 1px solid #2b3412;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #b3c290;
+}
+
+.panel-caption-right {
+  color: #e4ff4a;
+}
+
+.panel-msg {
+  margin: 3px 6px 4px;
+  min-height: 14px;
+  font-size: 11px;
+  color: #cdd5a5;
+}
+
+.panel-msg.error { color: #ff8a8a; }
+.panel-msg.success { color: #c8ff4a; }
+
+/* ====== CHAT ====== */
+
+.chat-panel {
+  max-height: 520px;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 4px 5px 3px;
+  overflow-y: auto;
+  background: radial-gradient(circle at top, #263614 0, #10180b 60%);
+}
+
+.chat-row {
+  margin-bottom: 2px;
+  font-size: 11px;
+}
+
+.chat-row .time {
+  color: #9fb46c;
+  margin-right: 3px;
+}
+
+.chat-row.system { color: #c8ff4a; }
+.chat-row.self { color: #ffffff; }
+
+.chat-input-row {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-top: 1px solid #2b3412;
+  background: #151d07;
+}
+
+#chat-input {
+  flex: 1;
+  border-radius: 2px;
+  border: 1px solid #3f4b18;
+  background: #11160a;
+  color: #e5f7c8;
+  font-size: 12px;
+  padding: 3px 5px;
+}
+
+.btn-chat-send {
+  padding: 3px 6px;
+  border-radius: 2px;
+  background: linear-gradient(to bottom, #e4ff4a, #7cab16);
+  color: #11130f;
+}
+
+/* ====== ROOMS TABLE ====== */
+
+.rooms-wrapper {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.rooms-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.rooms-table thead {
+  background: #20280e;
+}
+
+.rooms-table th,
+.rooms-table td {
+  padding: 3px 5px;
+  border-bottom: 1px solid #283213;
+}
+
+.rooms-table tbody tr:nth-child(even) {
+  background: #131b0a;
+}
+
+.rooms-table tbody tr:hover {
+  background: #1d2b0d;
+  cursor: pointer;
+}
+
+.room-row-selected {
+  outline: 1px solid #e4ff4a;
+}
+
+.room-row-current {
+  background: #283614;
+}
+
+.room-empty-row td {
+  font-style: italic;
+  color: #9ca37b;
+}
+
+/* ====== RIGHT PANEL (ROOM INFO) ====== */
+
+.battleinfo-panel {
+  max-height: 520px;
+}
+
+.room-preview {
+  margin: 5px;
+  height: 140px;
+  border-radius: 4px;
+  border: 1px solid #4a5c24;
+  background: radial-gradient(circle at center, #444d1c 0, #181f0b 75%);
+  overflow: hidden;
+}
+
+.room-preview-inner {
+  width: 100%;
+  height: 100%;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.room-preview-name {
+  font-weight: 700;
+  color: #fef9c3;
+}
+
+.room-preview-mode {
+  font-size: 11px;
+  color: #d9e5a3;
+}
+
+.room-info-main {
+  padding: 4px 7px 2px;
+  border-bottom: 1px solid #2b3412;
+}
+
+.room-info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1px;
+}
+
+.room-info-row .label {
+  color: #a9b782;
+  font-size: 11px;
+}
+
+.room-info-row .value {
+  color: #fefce8;
+  font-size: 11px;
+}
+
+/* ====== PLAYERS LIST ====== */
+
+.room-players-box {
+  flex: 1;
+  margin: 4px 5px;
+  border-radius: 3px;
+  border: 1px solid #314016;
+  background: #121a09;
+  display: flex;
+  flex-direction: column;
+}
+
+.room-players-header {
+  padding: 3px 5px;
+  border-bottom: 1px solid #283213;
+  font-size: 11px;
+  color: #d9e5a3;
+}
+
+.room-players-list {
+  list-style: none;
+  padding: 3px 4px 3px 6px;
+  margin: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.room-player-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+  font-size: 11px;
+}
+
+.room-player-item .idx {
+  color: #9fb46c;
+  width: 16px;
+}
+
+.room-player-item .nick {
+  flex: 1;
+}
+
+.room-player-item.you .nick {
+  color: #c8ff4a;
+}
+
+.badge-you {
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: #c8ff4a;
+  color: #11130f;
+  font-size: 9px;
+}
+
+.room-player-empty {
+  font-size: 11px;
+  color: #9ca37b;
+}
+
+/* ====== BOTTOM BUTTON ====== */
+
+.battleinfo-footer {
+  padding: 5px 7px 4px;
+}
+
+.btn-red {
+  background: linear-gradient(to bottom, #ff6666, #b91010);
+  color: #fff5f5;
+}
+
+/* ====== LOBBY RESPONSIVE ====== */
+
+@media (max-width: 1100px) {
+  .lobby-layout {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr);
+    grid-template-rows: auto auto;
+  }
+  .chat-panel {
+    grid-column: 1 / 3;
+    order: -1;
+  }
+}
+
+@media (max-width: 800px) {
+  .lobby-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .chat-panel {
+    grid-column: auto;
+  }
+}
+
+/* =====================
+   GAME SCREEN
+   ===================== */
+
+.game-app {
+  max-width: 1280px;
+  margin: 20px auto;
+  padding: 12px 14px 16px;
+  background:
+    radial-gradient(circle at top, #30333a 0, #050609 60%);
+  border-radius: 6px;
+  border: 1px solid #3b4149;
+  box-shadow:
+    0 0 0 1px #050607,
+    0 0 40px rgba(0, 0, 0, 0.95);
+  color: #e5e7eb;
+}
+
+.game-topbar {
+  border-bottom: 1px solid #394150;
+  padding-bottom: 4px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.game-topbar .logo {
+  color: #93c5fd;
+}
+
+.game-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.game-panel {
+  background: #020307;
+  border-radius: 4px;
+  border: 1px solid #1f2933;
+  padding: 6px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: inset 0 0 0 1px #080b12;
+}
+
+#game-canvas {
+  display: block;
+  border-radius: 4px;
+  border: 1px solid #111827;
+  background: radial-gradient(circle at center, #111827 0, #020617 70%);
+}
+
+/* HUD */
+
+.game-hud {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: flex;
+  gap: 8px;
+  padding: 5px 7px;
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 4px;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  font-size: 11px;
+}
+
+.hud-block {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.hud-label {
+  color: #9ca3af;
+}
+
+.hud-bar {
+  width: 110px;
+  height: 7px;
+  border-radius: 999px;
+  background: #020617;
+  overflow: hidden;
+}
+
+.hud-bar-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(to right, #22c55e, #4ade80);
+}
+
+.hud-value {
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.game-controls-hint {
+  margin-top: 3px;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.game-sidebar {
+  max-height: 560px;
+}
+
+/* GAME SIDEBAR PANELS */
+
+.game-sidebar .panel {
+  background: #040608;
+  border-color: #374151;
+  box-shadow: inset 0 0 0 1px #0b1018;
+}
+
+/* mobile */
+
+@media (max-width: 1000px) {
+  .game-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .game-panel {
+    order: 1;
+  }
+  .game-sidebar {
+    order: 2;
+  }
+}

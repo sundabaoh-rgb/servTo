@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tanki | Лобби</title>
+  <link rel="stylesheet" href="css/lobby.css" />
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+<div id="app" class="lobby-app">
+  <!-- ВЕРХНЕЕ МЕНЮ -->
+  <header class="lobby-topbar">
+    <div class="topbar-left">
+      <span class="logo">Tanki Online</span>
+      <span class="logo-sub">Лобби</span>
+    </div>
+
+    <div class="topbar-center">
+      <!-- Если потом будут другие вкладки, сюда добавим -->
+      <button class="topbar-tab active">
+        <i class="fas fa-crosshairs"></i>
+        Битвы
+      </button>
+    </div>
+
+    <div class="topbar-right">
+      <span id="top-username" class="top-username">
+        <i class="fas fa-user"></i> ...
+      </span>
+      <button id="btn-garage" class="btn btn-garage">
+        <i class="fas fa-warehouse"></i>
+        Гараж
+      </button>
+      <button id="btn-logout" class="btn btn-outline btn-logout">
+        <i class="fas fa-door-open"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ОСНОВНОЕ ЛОББИ: ЧАТ / СПИСОК БИТВ / ИНФА О БИТВЕ -->
+  <main class="lobby-layout">
+    <!-- ЛЕВАЯ КОЛОНКА: ЧАТ -->
+    <section class="panel chat-panel">
+      <div class="panel-header">
+        <span><i class="fas fa-comments"></i> Чат</span>
+      </div>
+      <div id="chat-messages" class="chat-messages">
+        <!-- позже сюда придёт реальный чат; сейчас — заглушка -->
+      </div>
+      <form id="chat-form" class="chat-input-row">
+        <input id="chat-input" type="text" placeholder="Написать в чат..." autocomplete="off" />
+        <button type="submit" class="btn btn-chat-send">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </form>
+    </section>
+
+    <!-- ЦЕНТР: СПИСОК БИТВ / КОМНАТ -->
+    <section class="panel battles-panel">
+      <div class="panel-header">
+        <span><i class="fas fa-list"></i> Список битв</span>
+        <div class="panel-header-actions">
+          <button id="btn-refresh-rooms" class="btn btn-small">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="panel-subheader">
+        <span class="panel-caption">Доступные комнаты</span>
+        <span id="rooms-summary" class="panel-caption-right"></span>
+      </div>
+
+      <div class="rooms-wrapper">
+        <table class="rooms-table">
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Название</th>
+            <th>Игроки</th>
+            <th>Время</th>
+            <th>Фонд</th>
+          </tr>
+          </thead>
+          <tbody id="rooms-tbody">
+          <!-- сюда рендерятся строки комнат -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="rooms-msg" class="panel-msg"></div>
+    </section>
+
+    <!-- ПРАВАЯ КОЛОНКА: ИНФА О БИТВЕ -->
+    <section class="panel battleinfo-panel">
+      <div class="panel-header">
+        <span><i class="fas fa-info-circle"></i> Информация о битве</span>
+      </div>
+
+      <!-- Превью карты -->
+      <div class="room-preview">
+        <div class="room-preview-inner">
+          <span id="room-preview-name" class="room-preview-name">Выберите битву</span>
+          <span id="room-preview-mode" class="room-preview-mode">Режим: DM</span>
+        </div>
+      </div>
+
+      <!-- Основная инфа -->
+      <div class="room-info-main">
+        <div class="room-info-row">
+          <span class="label">Название:</span>
+          <span id="room-info-title" class="value">—</span>
+        </div>
+        <div class="room-info-row">
+          <span class="label">Игроки:</span>
+          <span id="room-info-players" class="value">0/0</span>
+        </div>
+        <div class="room-info-row">
+          <span class="label">Время:</span>
+          <span id="room-info-time" class="value">—</span>
+        </div>
+        <div class="room-info-row">
+          <span class="label">Награда:</span>
+          <span id="room-info-reward" class="value">—</span>
+        </div>
+      </div>
+
+      <!-- Игроки в комнате -->
+      <div class="room-players-box">
+        <div class="room-players-header">
+          <span><i class="fas fa-users"></i> Участники</span>
+        </div>
+        <ul id="room-players-list" class="room-players-list">
+          <!-- сюда — список игроков -->
+        </ul>
+      </div>
+
+      <!-- Кнопка "Играть" / "Покинуть" -->
+      <div class="battleinfo-footer">
+        <button id="btn-join-leave" class="btn btn-green full-width">
+          <i class="fas fa-play"></i>
+          <span>ВСТУПИТЬ В БИТВУ</span>
+        </button>
+      </div>
+
+      <div id="battle-msg" class="panel-msg"></div>
+    </section>
+  </main>
+</div>
+
+<script src="js/lobby.js"></script>
+</body>
+</html>

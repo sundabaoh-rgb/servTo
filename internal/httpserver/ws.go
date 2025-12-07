@@ -76,11 +76,7 @@ func (s *Server) handleGameWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithCancel(r.Context())
-	go func() {
-		<-r.Context().Done()
-		cancel()
-	}()
+	ctx := context.Background()
 
 	s.matchService.AddPlayer(ctx, battleID, userID)
 

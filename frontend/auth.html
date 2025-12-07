@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tanki | Авторизация</title>
+  <link rel="stylesheet" href="css/auth.css" />
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        integrity="sha512-uto9mlQIQb7UcZ8+..."
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+  <div class="topbar-left">
+    <span class="logo">TANKI ONLINE</span>
+    <span class="logo-sub">боевой вход</span>
+  </div>
+  <div class="topbar-right">
+    <div id="server-status" class="server-status">
+      <span id="server-status-indicator" class="status-indicator"></span>
+      <span id="server-status-text" class="status-text">Проверка...</span>
+    </div>
+  </div>
+</header>
+
+    <main class="auth-layout">
+      <section class="auth-left">
+        <h1>Вход на поле боя</h1>
+<p class="subtitle">
+  Создай боевого танкиста, выбери комнату и врывайся в бой.
+</p>
+
+<ul class="auth-benefits">
+  <li><i class="fas fa-user-shield"></i> Один аккаунт для всех боёв</li>
+  <li><i class="fas fa-door-open"></i> Мгновенный вход в лобби</li>
+  <li><i class="fas fa-chart-line"></i> Прогресс и статистика сохраняются</li>
+</ul>
+
+      </section>
+
+      <section class="auth-right">
+        <div class="auth-card">
+          <div class="auth-tabs">
+            <button id="tab-login" class="tab active">
+              <i class="fas fa-right-to-bracket"></i> Вход
+            </button>
+            <button id="tab-register" class="tab">
+              <i class="fas fa-user-plus"></i> Регистрация
+            </button>
+          </div>
+
+          <!-- Форма логина -->
+          <form id="login-form" class="form active">
+            <div class="form-group">
+              <label for="login-nickname">Никнейм</label>
+              <input type="text"
+                     id="login-nickname"
+                     name="nickname"
+                     autocomplete="username"
+                     required
+                     placeholder="Например, BloodPhoenix" />
+            </div>
+
+            <div class="form-group">
+              <label for="login-password">Пароль</label>
+              <input type="password"
+                     id="login-password"
+                     name="password"
+                     autocomplete="current-password"
+                     required
+                     placeholder="••••••••" />
+            </div>
+
+            <button type="submit" class="btn btn-green full-width">
+              <i class="fas fa-play"></i>
+              <span>В БОЙ!</span>
+            </button>
+
+            <div id="login-msg" class="form-msg"></div>
+          </form>
+
+          <!-- Форма регистрации -->
+          <form id="register-form" class="form">
+            <div class="form-group">
+              <label for="reg-nickname">Никнейм</label>
+              <input type="text"
+                     id="reg-nickname"
+                     name="nickname"
+                     required
+                     placeholder="Придумай боевой позывной" />
+            </div>
+
+            <div class="form-group">
+              <label for="reg-password">Пароль</label>
+              <input type="password"
+                     id="reg-password"
+                     name="password"
+                     required
+                     placeholder="Минимум 6 символов" />
+            </div>
+
+            <button type="submit" class="btn btn-purple full-width">
+              <i class="fas fa-user-plus"></i>
+              <span>Создать танкиста</span>
+            </button>
+
+            <div id="register-msg" class="form-msg"></div>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/auth.js"></script>
+</body>
+</html>
