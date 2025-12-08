@@ -9,7 +9,7 @@ const state = {
   roomId: null,
   roomInfo: null,
   players: {},
-  bullets: [],    
+  bullets: [],
   meId: null,
 
   ws: null,
@@ -20,11 +20,15 @@ const state = {
     down: false,
     left: false,
     right: false,
-    shoot: false, 
+    shoot: false,
+    turretLeft: false,   // Z
+    turretRight: false,  // X
   },
 
   hp: 1,
   speed: 0,
+
+  playerOrder: [],   // фиксированный порядок слотов игроков
 };
 
 
@@ -152,6 +156,9 @@ async function loadRoomPlayersOnce() {
       };
     });
     state.players = map;
+
+    state.playerOrder = players.map(p => p.id);
+
     if (!state.meId && state.currentUser) {
       state.meId = state.currentUser.id;
     }
@@ -160,6 +167,39 @@ async function loadRoomPlayersOnce() {
     // пофиг
   }
 }
+
+function updateHudHpFromState() {
+  const fill = document.querySelector(".hud-bar-fill");
+  if (!fill) return;
+
+  const me = state.meId ? state.players[state.meId] : null;
+
+  const maxHp = 100;
+  let hp = maxHp;
+
+  if (me && typeof me.hp === "number") {
+    hp = me.hp;
+  }
+
+  hp = Math.max(0, Math.min(maxHp, hp));
+  const ratio = hp / maxHp;
+
+  fill.style.width = (ratio * 100) + "%";
+
+  // цвет как у полоски над танком
+  let bg;
+  if (ratio >= 0.75) {
+    bg = "linear-gradient(to right, #22c55e, #a3e635)";
+  } else if (ratio >= 0.5) {
+    bg = "linear-gradient(to right, #eab308, #fde047)";
+  } else if (ratio >= 0.25) {
+    bg = "linear-gradient(to right, #f97316, #fdba74)";
+  } else {
+    bg = "linear-gradient(to right, #ef4444, #fca5a5)";
+  }
+  fill.style.background = bg;
+}
+
 
 function updateRoomInfoUI() {
   const info = state.roomInfo;
@@ -205,13 +245,37 @@ function updatePlayersListUI() {
     return;
   }
 
+  // сортировка по скилу: kills desc, deaths asc, ник
+  playersArr.sort((a, b) => {
+    if (b.kills !== a.kills) return b.kills - a.kills;
+    if (a.deaths !== b.deaths) return a.deaths - b.deaths;
+    return a.nickname.localeCompare(b.nickname);
+  });
+
+  // заголовок-строка
+  const header = document.createElement("li");
+  header.className = "room-player-header";
+  header.innerHTML = `
+    <span class="idx">#</span>
+    <span class="nick">Ник</span>
+    <span class="stat kills">Kill</span>
+    <span class="stat deaths">Dead</span>
+    <span class="stat kd">K/D</span>
+  `;
+  list.appendChild(header);
+
   playersArr.forEach((p, idx) => {
     const li = document.createElement("li");
     const isMe = state.meId && p.id === state.meId;
+    const kd = p.deaths > 0 ? (p.kills / p.deaths) : p.kills;
+
     li.className = "room-player-item" + (isMe ? " you" : "");
     li.innerHTML = `
       <span class="idx">${idx + 1}.</span>
       <span class="nick">${p.nickname}</span>
+      <span class="stat kills">${p.kills}</span>
+      <span class="stat deaths">${p.deaths}</span>
+      <span class="stat kd">${kd.toFixed(2)}</span>
       ${isMe ? '<span class="badge-you">ВЫ</span>' : ""}
     `;
     list.appendChild(li);
@@ -219,6 +283,8 @@ function updatePlayersListUI() {
 
   updateRoomInfoUI();
 }
+
+
 
 // ====== WEBSOCKET ======
 
@@ -244,7 +310,7 @@ function connectWs() {
 
   ws.onopen = () => {
     state.wsConnected = true;
-    setMsg("game-msg", "✅ Соединение с боевым сервером установлено", "success");
+    setMsg("game-msg", "Соединение с сервером установлено", "success");
 
     // приветственный пакет (опционально)
     const hello = {
@@ -278,71 +344,134 @@ function connectWs() {
   };
 }
 
+
+
+// === RELOAD HUD ===
+const reloadBarEl   = document.getElementById('reload-bar');
+const reloadFillEl  = reloadBarEl?.querySelector('.reload-bar-fill');
+const reloadLabelEl = reloadBarEl?.querySelector('.reload-bar-label');
+
+function updateReloadFromServer(cd, maxCd) {
+  if (!reloadBarEl || !reloadFillEl || !reloadLabelEl) return;
+
+  // защита от мусора
+  if (!maxCd || maxCd <= 0) {
+    reloadFillEl.style.transform = 'scaleX(1)';
+    reloadBarEl.classList.remove('reloading');
+    reloadLabelEl.textContent = 'Готов';
+    return;
+  }
+
+  // cd — оставшееся время, 0..maxCd
+  const clampedCd = Math.max(0, Math.min(maxCd, cd));
+  const ratio = 1 - clampedCd / maxCd; // 0 — пусто, 1 — перезарядился
+
+  reloadFillEl.style.transform = `scaleX(${ratio})`;
+
+  if (clampedCd <= 0.001) {
+    reloadBarEl.classList.remove('reloading');
+    reloadLabelEl.textContent = 'Готов';
+  } else {
+    reloadBarEl.classList.add('reloading');
+    reloadLabelEl.textContent = clampedCd.toFixed(1) + ' c';
+  }
+}
+
+
+
+
 function handleWsMessage(msg) {
   if (!msg || typeof msg !== "object") return;
 
   if (msg.type === "state") {
-    const snap = msg.data;
-    if (!snap) return;
+  const snap = msg.data;
+  if (!snap) return;
 
-    // --- игроки ---
-    if (Array.isArray(snap.players)) {
-      const newMap = {};
+  if (Array.isArray(snap.players)) {
+    const prevPlayers = state.players;
+    const newMap = {};
 
-      snap.players.forEach((p, idx) => {
-        const prev = state.players[p.id];
+    snap.players.forEach((p, idx) => {
+  const prev = prevPlayers[p.id];
 
-        let angle = prev?.angle ?? -90;
+  // БЕРЁМ УГОЛ ИЗ СЕРВЕРА, а не из dx/dy
+  let angle = (typeof p.angle === "number")
+    ? p.angle
+    : (prev?.angle ?? -90);
 
-        // если координаты изменились — пересчитаем направление
-        if (prev && (p.x !== prev.x || p.y !== prev.y)) {
-          const dx = p.x - prev.x;
-          const dy = p.y - prev.y;
+  const hp     = typeof p.hp === "number"    ? p.hp    : (prev?.hp    ?? 100);
+  const kills  = typeof p.kills === "number" ? p.kills : (prev?.kills ?? 0);
+  const deaths = typeof p.deaths === "number"? p.deaths: (prev?.deaths?? 0);
+  const dead   = !!p.dead;
 
-          if (dx !== 0 || dy !== 0) {
-            angle = Math.atan2(dy, dx) * 180 / Math.PI; // в градусы
-          }
-        }
+  const turretAngle = (typeof p.turret_angle === "number")
+    ? p.turret_angle
+    : (prev?.turretAngle ?? angle);
 
-        newMap[p.id] = {
-          id: p.id,
-          nickname: prev?.nickname || p.id.slice(0, 8),
-          x: p.x,
-          y: p.y,
-          angle,                                // <--- ВАЖНО
-          color: prev?.color || colorForIndex(idx),
-        };
-      });
-
-      state.players = newMap;
-
-      if (state.currentUser) {
-        state.meId = state.currentUser.id;
-      }
-
-      updatePlayersListUI();
-      updateRoomInfoUI();
-    }
-
-    // --- пули ---
-    if (Array.isArray(snap.bullets)) {
-      state.bullets = snap.bullets.map(b => ({
-        id: b.id,
-        x: b.x,
-        y: b.y,
-      }));
-    } else {
-      state.bullets = [];
-    }
-
-    return;
+  const wasAlive = prev ? (!prev.dead && prev.hp > 0) : false;
+  if (wasAlive && dead && typeof spawnExplosion === "function") {
+    spawnExplosion(p.x, p.y);
   }
 
+  const shootCd    = typeof p.shoot_cooldown === "number"
+    ? p.shoot_cooldown
+    : (prev?.shootCd ?? 0);
+
+  const shootCdMax = typeof p.max_shoot_cooldown === "number"
+    ? p.max_shoot_cooldown
+    : (prev?.shootCdMax ?? 0.9);
+
+  const tankObj = {
+    id: p.id,
+    nickname: prev?.nickname || p.id.slice(0, 8),
+    x: p.x,
+    y: p.y,
+    angle,          // <-- уже из сервера
+    turretAngle,
+    color: prev?.color || colorForIndex(idx),
+    hp,
+    kills,
+    deaths,
+    dead,
+    shootCd,
+    shootCdMax,
+  };
+
+  newMap[p.id] = tankObj;
+
+  if (state.currentUser && p.id === state.currentUser.id) {
+    state.meId = p.id;
+    updateReloadFromServer(shootCd, shootCdMax);
+  }
+});
+
+    state.players = newMap;
+
+    updatePlayersListUI();
+    updateRoomInfoUI();
+    updateHudHpFromState();
+  }
+
+  // пули
+  if (Array.isArray(snap.bullets)) {
+    state.bullets = snap.bullets.map(b => ({
+      id: b.id,
+      x:  b.x,
+      y:  b.y,
+    }));
+  } else {
+    state.bullets = [];
+  }
+
+  return;
+}
+
   if (msg.type === "pong") {
-    // сюда потом можно пинг вернуть
+    // тут потом пинг замеришь
     return;
   }
 }
+
 
 
 
@@ -363,6 +492,11 @@ function sendInputToServer() {
       left: state.keys.left,
       right: state.keys.right,
       shoot: state.keys.shoot,
+      turret_left:  state.keys.turretLeft,
+      turret_right: state.keys.turretRight,
+      turret_to:    typeof state.turretAngle === "number" ? state.turretAngle : 999999, // если отключаем мышь то 999999
+          // turret_to: 999999, // если отключаем мышь то 999999
+
     },
   };
 
@@ -411,6 +545,7 @@ function drawTank(tank) {
   if (!canvas) return;
 
   const WORLD_MAX = 20;
+  const isDead = tank.dead || tank.hp <= 0;
 
   const worldX = tank.x;
   const worldY = tank.y;
@@ -418,37 +553,87 @@ function drawTank(tank) {
   const px = (worldX / WORLD_MAX) * canvas.width;
   const py = (worldY / WORLD_MAX) * canvas.height;
 
-  // ВАЖНО:
-  // bodyLength – вдоль ствола (ось X в локе)
-  // bodyWidth  – поперёк, между гуслями (ось Y)
   const bodyLength = 30;
-  const bodyWidth = 18;
+  const bodyWidth  = 18;
 
-  const treadWidth = 6;          // толщина гусли по Y
-  const treadGap = 2;            // отступ от корпуса
+  const treadWidth = 6;
+  const treadGap   = 2;
 
   const barrelLength = 20;
-  const barrelWidth = 4;
+  const barrelWidth  = 4;
 
-  const angleRad = (tank.angle || 0) * Math.PI / 180;
+  // корпус
+  const angleDeg = (typeof tank.angle === "number")
+  ? tank.angle
+  : -90;
+  const angleRad  = angleDeg * Math.PI / 180;
 
+  // башня
+  const turretDeg = (typeof tank.turretAngle === "number")
+    ? tank.turretAngle
+    : angleDeg;
+  const turretRad = turretDeg * Math.PI / 180;
+
+  // ====== ТРУПИК ======
+  if (isDead) {
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(angleRad);
+
+    // крест из гусель
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+
+    ctx.rotate(Math.PI / 4);
+    ctx.fillStyle = "#020617";
+    ctx.fillRect(-bodyLength, -treadWidth / 2, bodyLength * 2, treadWidth);
+    ctx.strokeStyle = "rgba(30,64,175,0.9)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(-bodyLength, -treadWidth / 2, bodyLength * 2, treadWidth);
+
+    ctx.rotate(Math.PI / 2);
+    ctx.fillStyle = "#020617";
+    ctx.fillRect(-bodyLength, -treadWidth / 2, bodyLength * 2, treadWidth);
+    ctx.strokeRect(-bodyLength, -treadWidth / 2, bodyLength * 2, treadWidth);
+
+    ctx.restore();
+
+    // обгоревший корпус
+    ctx.fillStyle = "#020617";
+    ctx.fillRect(-bodyLength / 2, -bodyWidth / 2, bodyLength, bodyWidth);
+
+    ctx.strokeStyle = "rgba(148,163,184,0.6)";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(-bodyLength / 2, -bodyWidth / 2, bodyLength, bodyWidth);
+
+    // центр — вмятина
+    ctx.beginPath();
+    ctx.arc(0, 0, bodyWidth / 3, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(15,23,42,0.95)";
+    ctx.fill();
+
+    // сломанный короткий ствол
+    ctx.fillStyle = "#4b5563";
+    ctx.fillRect(bodyLength / 4, -barrelWidth / 2, barrelLength / 2, barrelWidth);
+
+    ctx.restore();
+    // HP-бар для трупа не рисуем
+    return;
+  }
+
+  // ====== КОРПУС ======
   ctx.save();
   ctx.translate(px, py);
   ctx.rotate(angleRad);
 
-  // --- ГУСЛИ ---
-
-  ctx.fillStyle = "#1f2937"; // тёмно-серый
-
-  // верхняя гусля (по направлению вперёд/назад, над корпусом)
+  // гусли
+  ctx.fillStyle = "#1f2937";
   ctx.fillRect(
-    -bodyLength / 2 - 2,                  // x
-    -bodyWidth / 2 - treadWidth - treadGap, // y
-    bodyLength + 4,                       // ширина вдоль ствола
-    treadWidth                            // высота (толщина) гусли
+    -bodyLength / 2 - 2,
+    -bodyWidth / 2 - treadWidth - treadGap,
+    bodyLength + 4,
+    treadWidth
   );
-
-  // нижняя гусля
   ctx.fillRect(
     -bodyLength / 2 - 2,
     bodyWidth / 2 + treadGap,
@@ -456,35 +641,28 @@ function drawTank(tank) {
     treadWidth
   );
 
-  // небольшие полоски на гуслях
   ctx.strokeStyle = "rgba(15,23,42,0.9)";
   ctx.lineWidth = 1;
   const treadLines = 5;
   for (let i = 0; i < treadLines; i++) {
     const lx = -bodyLength / 2 - 2 + ((i + 1) * (bodyLength + 4)) / (treadLines + 1);
 
-    // верхняя
+    // верхняя гусля
     ctx.beginPath();
     ctx.moveTo(lx, -bodyWidth / 2 - treadGap);
     ctx.lineTo(lx, -bodyWidth / 2 - treadWidth - treadGap);
     ctx.stroke();
 
-    // нижняя
+    // нижняя гусля
     ctx.beginPath();
     ctx.moveTo(lx, bodyWidth / 2 + treadGap);
     ctx.lineTo(lx, bodyWidth / 2 + treadWidth + treadGap);
     ctx.stroke();
   }
 
-  // --- КОРПУС ---
-
-  ctx.fillStyle = tank.color || "#3b82f6"; // ярко-синий
-  ctx.fillRect(
-    -bodyLength / 2,
-    -bodyWidth / 2,
-    bodyLength,
-    bodyWidth
-  );
+  // корпус
+  ctx.fillStyle = tank.color || "#15803d";
+  ctx.fillRect(-bodyLength / 2, -bodyWidth / 2, bodyLength, bodyWidth);
 
   ctx.strokeStyle = "rgba(15,23,42,0.9)";
   ctx.lineWidth = 1.5;
@@ -495,26 +673,92 @@ function drawTank(tank) {
     bodyWidth
   );
 
-  // --- БАШНЯ ---
+  ctx.restore();
 
+  // ====== БАШНЯ + СТВОЛ (отдельно, по turretAngle) ======
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.rotate(turretRad);
+
+  // башня
   ctx.beginPath();
-  ctx.arc(0, 0, bodyWidth / 3, 0, Math.PI * 2);
-  ctx.fillStyle = "#22c55e"; // зелёная башня
-  ctx.fill();
+ctx.arc(0, 0, bodyWidth / 3, 0, Math.PI * 2);
+// более тёмный корпус, яркая башня
+ctx.fillStyle = "#16a34a";        // поярче зелёный
+ctx.fill();
+ctx.strokeStyle = "rgba(15,23,42,0.9)";
+ctx.lineWidth = 2;
+ctx.stroke();
 
-  // --- СТВОЛ (строго вперёд по X) ---
+// ствол
+ctx.fillStyle = "#e5e7eb";
+ctx.fillRect(
+  bodyLength / 2,
+  -barrelWidth / 2,
+  barrelLength,
+  barrelWidth
+);
 
-  ctx.fillStyle = "#e5e7eb";
+  ctx.restore();
+
+  // ====== HP-БАР ======
+  const maxHp = 100;
+  const rawHp = typeof tank.hp === "number" ? tank.hp : maxHp;
+  const hp    = Math.max(0, Math.min(maxHp, rawHp));
+  const ratio = hp / maxHp;
+
+  const barWidth  = 34;
+  const barHeight = 5;
+  const barX = px - barWidth / 2;
+  const barY = py - 26;
+
+  let barColor;
+  if (ratio >= 0.75) {
+    barColor = "rgba(34,197,94,0.9)";
+  } else if (ratio >= 0.5) {
+    barColor = "rgba(234,179,8,0.9)";
+  } else if (ratio >= 0.25) {
+    barColor = "rgba(249,115,22,0.9)";
+  } else {
+    barColor = "rgba(239,68,68,0.95)";
+  }
+
+  ctx.save();
+  ctx.fillStyle = "rgba(15,23,42,0.85)";
+  ctx.fillRect(barX, barY, barWidth, barHeight);
+
+  ctx.fillStyle = barColor;
   ctx.fillRect(
-    bodyLength / 2,          // начинаем от правого края корпуса
-    -barrelWidth / 2,
-    barrelLength,
-    barrelWidth
+    barX + 1,
+    barY + 1,
+    (barWidth - 2) * ratio,
+    barHeight - 2
   );
 
+  ctx.strokeStyle = "rgba(15,23,42,1)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(
+    barX + 0.5,
+    barY + 0.5,
+    barWidth - 1,
+    barHeight - 1
+  );
   ctx.restore();
 }
 
+
+
+
+
+
+/**
+ * progress: 0..1
+ */
+function updateReloadHUD(progress) {
+  if (!reloadFillEl) return;
+  const clamped = Math.max(0, Math.min(1, progress));
+  reloadFillEl.style.transform = `scaleX(${clamped})`;
+}
 
 
 
@@ -579,6 +823,12 @@ function handleKeyDown(e) {
     case "Escape":
       exitToLobby();
       break;
+    case "KeyZ":
+      if (!state.keys.turretLeft)  { state.keys.turretLeft  = true; changed = true; }
+      break;
+    case "KeyX":
+      if (!state.keys.turretRight) { state.keys.turretRight = true; changed = true; }
+      break;
     default:
       return;
   }
@@ -612,6 +862,12 @@ function handleKeyUp(e) {
     case "Space":
       if (state.keys.shoot) { state.keys.shoot = false; changed = true; }
       break;
+    case "KeyZ":
+      if (state.keys.turretLeft)  { state.keys.turretLeft  = false; changed = true; }
+      break;
+    case "KeyX":
+      if (state.keys.turretRight) { state.keys.turretRight = false; changed = true; }
+      break;
     default:
       return;
   }
@@ -621,6 +877,28 @@ function handleKeyUp(e) {
   }
 }
 
+// ====== MOUSE SHOOT (LMB) ======
+function handleMouseDown(e) {
+  if (!canvas) return;
+  if (e.button !== 0) return; // только ЛКМ
+
+  // чтобы не выделялось/не тащилось ничего
+  e.preventDefault();
+
+  if (!state.keys.shoot) {
+    state.keys.shoot = true;
+    sendInputToServer();
+  }
+}
+
+function handleMouseUp(e) {
+  if (e.button !== 0) return;
+
+  if (state.keys.shoot) {
+    state.keys.shoot = false;
+    sendInputToServer();
+  }
+}
 
 
 
@@ -654,11 +932,41 @@ async function exitToLobby() {
 }
 
 // ====== INIT ======
+window.addEventListener("mousemove", e => {
+  if (!canvas) return;
+  if (!state.meId) return;
+
+  const me = state.players[state.meId];
+  if (!me) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  const WORLD_MAX = 20;
+
+  // координаты мыши в МИРЕ
+  const worldMouseX = (mx / canvas.width)  * WORLD_MAX;
+  const worldMouseY = (my / canvas.height) * WORLD_MAX;
+
+  const dx = worldMouseX - me.x;
+  const dy = worldMouseY - me.y;
+
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+  state.turretAngle = angle;
+  sendInputToServer();
+});
+
 
 document.addEventListener("DOMContentLoaded", async () => {
   canvas = document.getElementById("game-canvas");
   if (!canvas) return;
   ctx = canvas.getContext("2d");
+
+  const rect = canvas.getBoundingClientRect();
+  canvas.width  = rect.width;
+  canvas.height = rect.height;
 
   loadTokens();
   state.roomId = getRoomIdFromUrl();
@@ -685,6 +993,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   window.addEventListener("keydown", handleKeyDown);
   window.addEventListener("keyup", handleKeyUp);
+
+  canvas.addEventListener("mousedown", handleMouseDown);
+  window.addEventListener("mouseup", handleMouseUp);
 
   connectWs();
   requestAnimationFrame(gameLoop);

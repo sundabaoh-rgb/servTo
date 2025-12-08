@@ -20,7 +20,7 @@ type Config struct {
 const (
 	envPrefix        = "TANKI_"
 	defaultEnv       = "dev"
-	defaultHTTPAddr  = ":8080"
+	defaultHTTPAddr  = "0.0.0.0:8080"
 	defaultPGDSN     = "" //заглушка plug
 	defaultTickRate  = 30 * time.Millisecond
 	defaultXpPerKill = 34

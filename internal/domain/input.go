@@ -11,4 +11,8 @@ type PlayerInput struct {
 	Left  bool `json:"left"`
 	Right bool `json:"right"`
 	Shoot bool `json:"shoot"`
+
+	TurretLeft  bool    `json:"turret_left"`
+	TurretRight bool    `json:"turret_right"`
+	TurretTo    float64 `json:"turret_to"`
 }

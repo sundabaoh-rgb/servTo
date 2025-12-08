@@ -1,0 +1,618 @@
+/* =======================================================
+   TANKI | GAME FIELD 2.0
+   Dark sci-fi, неоновые акценты, меньше синевы
+   ======================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+/* ---------- ФОН И ОБОЛОЧКА ИГРЫ ---------- */
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 0% 0%, #12151c 0, transparent 50%),
+    radial-gradient(circle at 100% 100%, #050814 0, transparent 55%),
+    linear-gradient(to bottom, #030712 0, #020308 40%, #010106 100%);
+  color: #e5e7eb;
+  overflow: hidden;
+}
+
+.game-app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- ТОПБАР БОЯ ---------- */
+
+.game-topbar {
+  background:
+    radial-gradient(circle at 0 0, rgba(94, 234, 212, 0.12), transparent 55%),
+    radial-gradient(circle at 100% 0, rgba(244, 63, 94, 0.14), transparent 55%),
+    linear-gradient(to right, #050814, #020308, #050814);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.9),
+    inset 0 -1px 0 rgba(15, 23, 42, 0.95);
+  position: relative;
+  z-index: 10;
+}
+
+.game-topbar .logo {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  color: #e5e7eb;
+  text-shadow: 0 0 14px rgba(15, 23, 42, 0.9);
+}
+
+.game-topbar .logo-sub {
+  background: rgba(15, 23, 42, 0.9);
+  border-radius: 999px;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  padding: 4px 11px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+}
+
+/* центр: название комнаты + таймер */
+
+.game-room-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #f9fafb;
+  padding: 5px 16px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 0 0, rgba(34, 197, 94, 0.16), transparent 60%),
+    linear-gradient(to right, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95));
+  border: 1px solid rgba(34, 197, 94, 0.6);
+}
+
+.game-room-timer {
+  margin-left: 10px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(75, 85, 99, 0.9);
+  color: #e5e7eb;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.game-room-timer i {
+  color: #facc15;
+}
+
+/* ---------- ОБЩИЙ ЛЕЙАУТ ---------- */
+
+.game-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.7fr);
+  gap: 18px;
+  padding: 18px 24px 22px;
+}
+
+/* ---------- ЛЕВАЯ ПАНЕЛЬ: ПОЛЕ БОЯ ---------- */
+
+.game-panel {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(94, 234, 212, 0.1), transparent 55%),
+    radial-gradient(circle at 100% 100%, rgba(248, 113, 113, 0.12), transparent 60%),
+    linear-gradient(to bottom right, #020617, #020617);
+  border: 1px solid rgba(31, 41, 55, 0.9);
+  box-shadow:
+    0 26px 60px rgba(0, 0, 0, 0.95),
+    inset 0 0 0 1px rgba(15, 23, 42, 0.9);
+  display: flex;
+  flex-direction: column;
+}
+
+.game-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg,
+      rgba(94, 234, 212, 0.22),
+      rgba(52, 211, 153, 0.14),
+      rgba(248, 113, 113, 0.22));
+  mix-blend-mode: soft-light;
+  opacity: 0.35;
+}
+
+/* сам канвас */
+
+#game-canvas {
+  display: block;
+  width: calc(100% - 24px);
+  height: auto;
+  max-height: 100%;
+  aspect-ratio: 16 / 9;
+  margin: 14px 12px 0;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 50% 20%, #020617 0, #020617 45%, #000 100%);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 1),
+    0 0 32px rgba(15, 23, 42, 0.95);
+}
+
+/* ---------- HUD НАД ПОЛЕМ ---------- */
+
+.game-hud {
+  position: absolute;
+  left: 18px;
+  bottom: 52px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(55, 65, 81, 0.95);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.9),
+    0 0 18px rgba(94, 234, 212, 0.35);
+  backdrop-filter: blur(14px);
+}
+
+.hud-block {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+}
+
+.hud-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+/* полоса HP в HUD */
+
+.hud-bar {
+  width: 120px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(3, 7, 18, 0.96);
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(55, 65, 81, 1),
+    0 0 10px rgba(52, 211, 153, 0.7);
+}
+
+.hud-bar-fill {
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(to right, #22c55e, #a3e635);
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.85);
+  transition: width 0.16s ease-out, background 0.16s ease-out;
+}
+
+/* подсказка по управлению */
+
+.game-controls-hint {
+  position: absolute;
+  right: 18px;
+  bottom: 54px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #9ca3af;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  backdrop-filter: blur(12px);
+  max-width: 260px;
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.9),
+    0 0 14px rgba(15, 23, 42, 0.9);
+}
+
+/* системные сообщения боя */
+
+#game-msg {
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  transform: translateX(-50%);
+  min-width: 260px;
+  max-width: 420px;
+  text-align: center;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: rgba(15, 23, 42, 0.97);
+  border: 1px solid rgba(75, 85, 99, 0.95);
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.9),
+    0 0 12px rgba(94, 234, 212, 0.35);
+}
+
+/* ---------- ПРАВАЯ ПАНЕЛЬ: ИНФА / ИГРОКИ ---------- */
+
+.game-sidebar {
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 0 0, rgba(94, 234, 212, 0.14), transparent 60%),
+    radial-gradient(circle at 100% 100%, rgba(244, 63, 94, 0.18), transparent 60%),
+    linear-gradient(to bottom right, #020617, #020617);
+  border: 1px solid rgba(31, 41, 55, 0.95);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.96),
+    inset 0 0 0 1px rgba(15, 23, 42, 0.95);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.game-sidebar .panel-header {
+  padding: 10px 14px;
+  background: linear-gradient(to right, #020617, #030712);
+  border-bottom: 1px solid rgba(55, 65, 81, 1);
+}
+
+.room-info-main {
+  background: radial-gradient(circle at 0 0, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.98));
+  border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+}
+
+.room-info-row {
+  padding: 8px 14px;
+  border-bottom: 1px dashed rgba(55, 65, 81, 0.85);
+  display: flex;
+  justify-content: space-between;
+}
+
+.room-info-row:last-child {
+  border-bottom: none;
+}
+
+.room-info-row .label {
+  font-size: 11px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.room-info-row .value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+/* список игроков */
+
+.room-players-box {
+  margin: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(31, 41, 55, 0.95);
+  background: rgba(15, 23, 42, 0.98);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.room-players-header {
+  padding: 9px 14px;
+  background: linear-gradient(to right, #020617, #030712);
+  border-bottom: 1px solid rgba(31, 41, 55, 1);
+}
+
+.room-players-list {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 8px 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* скролл */
+
+.room-players-list::-webkit-scrollbar {
+  width: 6px;
+}
+.room-players-list::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 1);
+}
+.room-players-list::-webkit-scrollbar-thumb {
+  background: #22c55e;
+  border-radius: 999px;
+}
+
+/* карточка игрока */
+
+.room-player-item {
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.96);
+  border-left: 3px solid rgba(55, 65, 81, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.room-player-item.you {
+  border-left-color: #22c55e;
+  background:
+    radial-gradient(circle at 0 0, rgba(34, 197, 94, 0.24), transparent 60%),
+    rgba(15, 23, 42, 0.98);
+}
+
+.badge-you {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.7);
+  color: #bbf7d0;
+}
+
+/* футер с кнопкой */
+
+.battleinfo-footer {
+  margin-top: auto;
+  padding: 12px 14px;
+  background: radial-gradient(circle at 100% 0, rgba(244, 63, 94, 0.18), transparent 70%),
+              rgba(10, 10, 15, 0.98);
+  border-top: 1px solid rgba(31, 41, 55, 0.95);
+}
+
+/* ---------- КНОПКИ / УТИЛИТЫ ---------- */
+
+.btn {
+  cursor: pointer;
+  border-radius: 999px;
+  border: 1px solid rgba(75, 85, 99, 0.95);
+  background: linear-gradient(to bottom, #020617, #020617);
+  color: #e5e7eb;
+  font-size: 13px;
+  padding: 7px 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition:
+    background 0.16s ease,
+    transform 0.06s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease,
+    color 0.12s ease;
+}
+
+.btn:hover {
+  background: radial-gradient(circle at 0 0, rgba(94, 234, 212, 0.16), transparent 60%),
+              #020617;
+  border-color: #22c55e;
+  box-shadow: 0 0 18px rgba(34, 197, 94, 0.55);
+}
+
+.btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.btn-outline.btn-logout {
+  border-color: rgba(148, 163, 184, 0.8);
+}
+
+/* большая красная кнопка "покинуть бой" */
+
+.btn-red.full-width {
+  width: 100%;
+  justify-content: center;
+  border-radius: 999px;
+  background: linear-gradient(to bottom, #b91c1c, #7f1d1d);
+  border-color: rgba(248, 113, 113, 0.8);
+  box-shadow:
+    0 16px 40px rgba(127, 29, 29, 0.7),
+    0 0 16px rgba(248, 113, 113, 0.7);
+}
+
+.btn-red.full-width:hover {
+  background: linear-gradient(to bottom, #dc2626, #991b1b);
+}
+
+/* сообщения */
+
+.panel-msg {
+  font-size: 13px;
+  color: #e5e7eb;
+}
+
+.panel-msg.success { color: #4ade80; }
+.panel-msg.error   { color: #fca5a5; }
+
+/* ---------- АДАПТИВ ---------- */
+
+@media (max-width: 1024px) {
+  .game-layout {
+    grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.8fr);
+    padding: 14px;
+    gap: 14px;
+  }
+
+  .game-controls-hint {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  body {
+    overflow: auto;
+  }
+
+  .game-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .game-panel {
+    min-height: 260px;
+  }
+
+  .game-hud {
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .game-controls-hint {
+    position: static;
+    margin: 10px auto 12px;
+  }
+
+  .game-sidebar {
+    max-height: 420px;
+  }
+}
+
+/* ==== FIX: game-msg не перекрывает канвас ==== */
+#game-msg {
+  position: static;          /* вместо absolute */
+  top: auto;
+  left: auto;
+  transform: none;
+  margin: 8px auto 4px;      /* над полем, внутри панели */
+}
+
+/* ==== FIX: нормальный лейаут верхнего бара в бою ==== */
+
+.game-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 24px;
+  column-gap: 16px;
+}
+
+.game-topbar .topbar-left,
+.game-topbar .topbar-center,
+.game-topbar .topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* центр — реально центр, занимает свободное место */
+.game-topbar .topbar-center {
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+/* левый и правый блоки прижаты к краям */
+.game-topbar .topbar-left {
+  flex: 0 0 auto;
+}
+
+.game-topbar .topbar-right {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+}
+
+
+
+
+/* ==== ШКАЛА ПЕРЕЗАРЯДКИ ==== */
+
+.reload-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;              /* подгони, если нужно выше/ниже */
+  transform: translateX(-50%);
+  width: 260px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(3, 7, 18, 0.95);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 1),
+    0 10px 25px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  pointer-events: none;      /* чтобы не мешала кликам */
+}
+
+
+
+.reload-bar-fill {
+  position: absolute;
+  inset: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #facc15, #f97316);
+  box-shadow: 0 0 16px rgba(34, 197, 94, 0.55);
+  transform-origin: left center;
+  transform: scaleX(1);      /* 1 = полностью заряжен, 0 = пусто */
+  transition: transform 0.05s linear;
+}
+
+.reload-bar-label {
+  position: relative;
+  z-index: 1;
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #e5e7eb;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+}
+
+/* когда перезарядка идёт — меняем цвет текста */
+.reload-bar.reloading .reload-bar-label {
+  color: #facc15;
+}
+
+.reload-bar.disabled .reload-bar-fill {
+  opacity: 0.15;
+  box-shadow: none;
+}
+
+.room-player-header,
+.room-player-item {
+  display: grid;
+  grid-template-columns: 40px 1fr 50px 50px 60px auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.room-player-header {
+  padding: 6px 14px 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.room-player-header .stat {
+  text-align: right;
+}
+
+.room-player-item .stat {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
