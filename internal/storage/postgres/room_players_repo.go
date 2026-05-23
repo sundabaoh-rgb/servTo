@@ -136,7 +136,6 @@ func (r *RoomRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.Room, err
 		return nil, err
 	}
 
-	// ВАЖНО: порядок параметров должен совпадать с твоей функцией!
 	room := domain.NewRoomFromDB(
 		roomID,
 		name,

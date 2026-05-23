@@ -40,9 +40,6 @@ func NewUser(id uuid.UUID, nickname, hashedPassword string) (*User, error) {
 	}, nil
 }
 
-// ----- END КОНСТРУКТОР -----
-
-// Создание пользователя из данных БД (без изменения времени/хеша)
 func NewUserFromDB(
 	id uuid.UUID,
 	nickname string,
@@ -110,7 +107,6 @@ func (u *User) AddXP(xp int) error {
 }
 
 // ----- ВЕРЕФИКАЦИЯ -----
-// service/auth_service.go вот тут хз как правильно
 func (u *User) VerifyPassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(u.passwordHash), []byte(password))
 	return err == nil

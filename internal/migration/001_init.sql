@@ -12,7 +12,7 @@ CREATE TABLE users (
 );
 
 CREATE INDEX idx_users_created_at ON users(created_at);
-CREATE INDEX idx_users_admins ON users(role) WHERE role = 'admin';  -- частичный индекс
+CREATE INDEX idx_users_admins ON users(role) WHERE role = 'admin';
 CREATE INDEX idx_users_xp ON users(xp DESC);
 
 CREATE TABLE rooms (
@@ -27,8 +27,8 @@ CREATE TABLE rooms (
     created_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_rooms_duration_minutes ON rooms(duration_minutes);  -- ← ДОБАВИЛ ;
-CREATE INDEX idx_rooms_created_at ON rooms(created_at);              -- ← ДОБАВИЛ ;
+CREATE INDEX idx_rooms_duration_minutes ON rooms(duration_minutes);
+CREATE INDEX idx_rooms_created_at ON rooms(created_at);
 CREATE INDEX idx_rooms_owner_id ON rooms(owner_id);
 CREATE INDEX idx_rooms_game_params ON rooms(max_players, active_players, duration_minutes);
 

@@ -48,7 +48,7 @@ func (r *BattleStatsRepo) InsertMany(ctx context.Context, stats []domain.PlayerB
 	br := r.pool.SendBatch(ctx, batch)
 	defer br.Close()
 
-	// прогоняем результаты, чтобы поймать ошибки
+	// сюда, ошибки
 	for range stats {
 		if _, err := br.Exec(); err != nil {
 			return err

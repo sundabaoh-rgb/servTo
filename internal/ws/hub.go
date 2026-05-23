@@ -15,8 +15,7 @@ type Broadcast struct {
 type Hub struct {
 	log logger.Logger
 
-	mu sync.RWMutex
-	// battleID -> set of connections
+	mu      sync.RWMutex
 	battles map[uuid.UUID]map[*Connection]struct{}
 
 	register   chan *Connection
@@ -93,7 +92,7 @@ func (h *Hub) sendToBattle(msg Broadcast) {
 		select {
 		case c.send <- msg.Data:
 		default:
-			// канал забился — выпиливаем коннект
+			// канал забился к черту коннект
 			go func(c *Connection) {
 				h.unregister <- c
 				c.Close()

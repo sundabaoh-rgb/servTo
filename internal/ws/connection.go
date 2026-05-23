@@ -63,7 +63,6 @@ func (c *Connection) Close() {
 	_ = c.conn.Close()
 }
 
-// Запуск двух горутин: читающей и пишущей
 func (c *Connection) Run(ctx context.Context) {
 	go c.writePump(ctx)
 	go c.readPump(ctx)
@@ -107,12 +106,9 @@ func (c *Connection) readPump(ctx context.Context) {
 		if msg.Type == "input" && msg.Input != nil && c.onInput != nil {
 			c.onInput(c.battleID, c.userID, *msg.Input)
 		}
-
-		// TODO: дальше сюда воткнём прокидку в MatchService
 	}
 }
 
-// пишем сообщения клиенту
 func (c *Connection) writePump(ctx context.Context) {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
@@ -144,7 +140,6 @@ func (c *Connection) writePump(ctx context.Context) {
 	}
 }
 
-// Helper: отправить тестовый state
 func (c *Connection) SendTestWelcome() {
 	data, _ := json.Marshal(ServerMessage{
 		Type: "hello",

@@ -11,7 +11,7 @@ type Logger interface {
 }
 
 type Config struct {
-	Mode string // тип логгера
+	Mode string
 }
 
 func New(cfg Config) (Logger, error) {
@@ -21,7 +21,6 @@ func New(cfg Config) (Logger, error) {
 	case "prod", "production":
 		return newZapProdLogger()
 	default:
-		// можно по дефолту dev, можно ошибка
 		return newZapDevLogger()
 	}
 }

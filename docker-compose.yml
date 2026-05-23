@@ -13,5 +13,23 @@ services:
       - ./internal/migration:/docker-entrypoint-initdb.d
     restart: unless-stopped
 
+  app:
+    build: .
+    container_name: tanki-app
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: "postgres://tanki:tanki@postgres:5432/tanki"
+    ports:
+      - "8080:8080"
+
+  frpc:
+      image: snowdreamtech/frpc
+      container_name: frpc
+      volumes:
+        - ~/frp/frpc.ini:/etc/frp/frpc.ini
+      restart: unless-stopped
+
 volumes:
   tanki_pg_data:

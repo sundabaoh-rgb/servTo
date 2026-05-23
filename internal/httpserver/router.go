@@ -9,14 +9,11 @@ import (
 )
 
 func (s *Server) setupRouter() {
-	// Healthcheck
 	s.mux.Get("/health", s.healthCheck)
 
-	// Инициализация хендлеров
 	authHandler := handlers.NewAuthHandler(s.authService)
 	roomHandler := handlers.NewRoomHandler(s.roomService)
 
-	// API Routes
 	s.mux.Route("/api/v1", func(r chi.Router) {
 		// Public routes
 		r.Group(func(public chi.Router) {
@@ -35,8 +32,6 @@ func (s *Server) setupRouter() {
 			protected.Get("/me", authHandler.Me)
 			protected.Post("/logout", authHandler.Logout)
 
-			//battle
-
 			// Rooms
 			protected.Get("/rooms", roomHandler.List)
 			protected.Post("/rooms", roomHandler.Create)
@@ -46,7 +41,6 @@ func (s *Server) setupRouter() {
 		})
 	})
 
-	// Static files for frontend
 	s.mux.Handle("/*",
 		http.StripPrefix("/",
 			http.FileServer(http.Dir("./frontend")),

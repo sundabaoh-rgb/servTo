@@ -14,11 +14,9 @@ import (
 var wsUpgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	// Локально разрешаем любые origin'ы
-	CheckOrigin: func(r *http.Request) bool { return true },
+	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-// GET /ws/game?room_id=...&token=...
 func (s *Server) handleGameWS(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	roomIDStr := q.Get("room_id")

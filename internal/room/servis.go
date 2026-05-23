@@ -18,7 +18,7 @@ var (
 type Repository interface {
 	Create(ctx context.Context, r *domain.Room) error
 	List(ctx context.Context) ([]*domain.Room, error)
-	GetByID(ctx context.Context, id uuid.UUID) (*domain.Room, error) // важно
+	GetByID(ctx context.Context, id uuid.UUID) (*domain.Room, error) // !!!
 }
 
 type PlayerRepository interface {
@@ -95,38 +95,30 @@ func (s *service) ListRoomPlayers(ctx context.Context, roomID uuid.UUID) ([]Play
 }
 
 func (s *service) JoinRoom(ctx context.Context, roomID, userID uuid.UUID) error {
-	// Проверяем, находится ли пользователь уже в этой комнате
 	inRoom, err := s.players.IsInRoom(ctx, roomID, userID)
 	if err != nil {
 		return err
 	}
 	if inRoom {
-		// Если уже в комнате - ничего не делаем (или возвращаем ошибку)
-		return nil // или return ErrUserAlreadyInRoom
+		return nil
 	}
 
-	// Проверяем, находится ли пользователь в ЛЮБОЙ другой комнате
-	currentRoom, err := s.players.GetUserRoom(ctx, userID) // Исправлено: передаем userID
+	currentRoom, err := s.players.GetUserRoom(ctx, userID)
 	if err != nil {
 		return err
 	}
 	if currentRoom != nil {
-		// Пользователь уже в другой комнате
 		if *currentRoom == roomID {
-			// Этот случай уже обработан выше, но на всякий случай
-			return nil // или return ErrUserAlreadyInRoom
+			return nil
 		}
-		// Пользователь в другой комнате
 		return errors.New("user is already in another room")
 	}
 
-	// Достаём комнату
 	rm, err := s.repo.GetByID(ctx, roomID)
 	if err != nil {
 		return err
 	}
 
-	// Считаем игроков
 	count, err := s.players.CountInRoom(ctx, roomID)
 	if err != nil {
 		return err
@@ -145,7 +137,6 @@ func (s *service) LeaveRoom(ctx context.Context, roomID, userID uuid.UUID) error
 		return err
 	}
 	if !inRoom {
-		// не в этой комнате — ничего не делаем
 		return nil
 	}
 	return s.players.Leave(ctx, roomID, userID)

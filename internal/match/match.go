@@ -18,13 +18,12 @@ import (
 
 const (
 	maxHP        = 100.0 // ХП танка
-	respawnDelay = 3.0   // через сколько секунд после смерти респавним
+	respawnDelay = 3.0   // через сколько секунд после смерти респавн
 	playerRadius = 0.75  // радиус хитбокса танка в игровых координатах
 	bulletDamage = 15.0  // урон пули
 	turretNoAim  = 999999.0
 )
 
-// как игрок выглядит в state
 type PlayerState struct {
 	UserID uuid.UUID
 	X      float64
@@ -33,9 +32,9 @@ type PlayerState struct {
 	VelX float64
 	VelY float64
 
-	Angle float64 // <-- угол в радианах, куда смотрит ствол
+	Angle float64 //в радианах градус ствола
 
-	// перезарядка между выстрелами, в секундах
+	// перезарядка между выстрелами
 	ShootCooldown float64
 	HP            float64
 
@@ -44,11 +43,10 @@ type PlayerState struct {
 	Kills  int
 	Deaths int
 
-	Dead         bool    // сейчас мёртв?
+	Dead         bool
 	RespawnTimer float64 // сколько осталось до респавна
 }
 
-// что мы храним про нажатые кнопки
 type InputState struct {
 	Up          bool
 	Down        bool
@@ -60,7 +58,6 @@ type InputState struct {
 	TurretTo    float64
 }
 
-// то, что отсылаем клиенту
 type PlayerView struct {
 	ID string  `json:"id"`
 	X  float64 `json:"x"`
@@ -73,13 +70,12 @@ type PlayerView struct {
 
 	Dead bool `json:"dead,omitempty"`
 
-	ShootCooldown    float64 `json:"shoot_cooldown"`     // сколько сек осталось
-	MaxShootCooldown float64 `json:"max_shoot_cooldown"` // константа fireCooldown
+	ShootCooldown    float64 `json:"shoot_cooldown"` // сколько сек осталось
+	MaxShootCooldown float64 `json:"max_shoot_cooldown"`
 
 	Angle float64 `json:"angle"` // <-- ГРАДУСЫ для клиента
 }
 
-// внутренняя пуля
 type BulletState struct {
 	ID      uuid.UUID
 	OwnerID uuid.UUID
@@ -90,7 +86,6 @@ type BulletState struct {
 	TTL     float64 // сколько секунд ещё живёт
 }
 
-// то, что летит клиенту
 type BulletView struct {
 	ID string  `json:"id"`
 	X  float64 `json:"x"`
@@ -102,14 +97,12 @@ type StateSnapshot struct {
 	Bullets []BulletView `json:"bullets,omitempty"`
 }
 
-// лог смерти в рамках матча
 type DeathEvent struct {
 	KillerID uuid.UUID `json:"killer_id"`
 	VictimID uuid.UUID `json:"victim_id"`
 	Time     time.Time `json:"time"`
 }
 
-// один матч (одна битва)
 type Match struct {
 	BattleID uuid.UUID
 
@@ -123,14 +116,11 @@ type Match struct {
 
 	tick time.Duration
 
-	// для ротации спавнов
 	spawnIdx int
 
-	// лог смертей внутри матча
 	deaths []DeathEvent
 }
 
-// создаётся из MatchService
 func NewMatch(battleID uuid.UUID, hub *ws.Hub, log logger.Logger) *Match {
 	return &Match{
 		BattleID: battleID,
@@ -163,7 +153,6 @@ func (m *Match) Run(ctx context.Context) {
 	}
 }
 
-// --- хелпер спавна игрока ---
 func (m *Match) spawnPlayer(p *PlayerState) {
 	spawns := [][2]float64{
 		{2, 2},
@@ -188,9 +177,9 @@ func (m *Match) spawnPlayer(p *PlayerState) {
 	p.Dead = false
 	p.RespawnTimer = 0
 
-	// корпус и башня смотрят вперёд (вверх/вправо — на твой вкус)
-	p.Angle = -math.Pi / 2 // радианы
-	p.TurretAngle = -90    // градусы, синхронно с корпусом
+	// настроим спавн
+	p.Angle = -math.Pi / 2
+	p.TurretAngle = -90
 	p.VelX, p.VelY = 0, 0
 }
 
@@ -239,8 +228,6 @@ func (m *Match) SetInput(userID uuid.UUID, in domain.PlayerInput) {
 	}
 }
 
-// обработка смерти (урон добил)
-// обработка смерти (урон добил)
 func (m *Match) handleDeath(killerID, victimID uuid.UUID) {
 	p, ok := m.players[victimID]
 	if !ok {
@@ -253,11 +240,11 @@ func (m *Match) handleDeath(killerID, victimID uuid.UUID) {
 	p.Dead = true
 	p.HP = 0
 	p.RespawnTimer = respawnDelay
-	p.Deaths++ // <-- смерть жертве
+	p.Deaths++
 
 	if killer, ok := m.players[killerID]; ok {
-		if killerID != victimID { // на всякий случай отфильтровать суицид
-			killer.Kills++ // <-- килл киллеру
+		if killerID != victimID {
+			killer.Kills++
 		}
 	}
 
@@ -273,7 +260,6 @@ func (m *Match) handleDeath(killerID, victimID uuid.UUID) {
 		"killer", killerID.String(),
 	)
 
-	// простое сообщение на клиент — killfeed
 	payload, _ := json.Marshal(ws.ServerMessage{
 		Type: "death",
 		Data: map[string]string{
@@ -284,13 +270,12 @@ func (m *Match) handleDeath(killerID, victimID uuid.UUID) {
 	m.hub.BroadcastState(m.BattleID, payload)
 }
 
-// один тик игры
 func (m *Match) step(dt float64) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	const (
-		speed        = 4.0 // скорость танка, одинаковая по X/Y
+		speed        = 4.0
 		bulletSpeed  = 16.0
 		bulletTTL    = 2.0
 		fireCooldown = 0.9
@@ -298,11 +283,9 @@ func (m *Match) step(dt float64) {
 		fieldMax     = 20.0
 	)
 
-	// --- игроки ---
 	for id, p := range m.players {
 		in := m.inputs[id]
 
-		// если мёртв — только респавн таймер
 		if p.Dead {
 			p.RespawnTimer -= dt
 			if p.RespawnTimer <= 0 {
@@ -312,7 +295,7 @@ func (m *Match) step(dt float64) {
 			continue
 		}
 
-		// --- башня ---
+		// башня
 		if in.TurretLeft {
 			p.TurretAngle -= 180 * dt
 		}
@@ -325,7 +308,7 @@ func (m *Match) step(dt float64) {
 			p.TurretAngle = in.TurretTo
 		}
 
-		// нормализуем к 0..360
+		// нормализуем к 360
 		for p.TurretAngle < 0 {
 			p.TurretAngle += 360
 		}
@@ -333,7 +316,6 @@ func (m *Match) step(dt float64) {
 			p.TurretAngle -= 360
 		}
 
-		// --- кулдаун ---
 		if p.ShootCooldown > 0 {
 			p.ShootCooldown -= dt
 			if p.ShootCooldown < 0 {
@@ -341,7 +323,6 @@ func (m *Match) step(dt float64) {
 			}
 		}
 
-		// --- движение корпуса ---
 		vx, vy := 0.0, 0.0
 		if in.Up {
 			vy -= 1
@@ -367,17 +348,14 @@ func (m *Match) step(dt float64) {
 			p.X += p.VelX * dt
 			p.Y += p.VelY * dt
 
-			// корпус смотрит туда, куда двигаемся
 			p.Angle = math.Atan2(vy, vx)
 		} else {
-			// легкое затухание
 			p.VelX *= 0.85
 			p.VelY *= 0.85
 			p.X += p.VelX * dt
 			p.Y += p.VelY * dt
 		}
 
-		// границы
 		if p.X < fieldMin {
 			p.X = fieldMin
 		}
@@ -391,14 +369,13 @@ func (m *Match) step(dt float64) {
 			p.Y = fieldMax
 		}
 
-		// --- выстрел: ИЛИ по корпусу, ИЛИ по башне ---
 		if in.Shoot && p.ShootCooldown == 0 {
 			ang := p.TurretAngle * math.Pi / 180
 			dirX := math.Cos(ang)
 			dirY := math.Sin(ang)
 
 			if dirX == 0 && dirY == 0 {
-				dirX, dirY = 0, -1 // дефолт: вверх
+				dirX, dirY = 0, -1
 			}
 
 			b := &BulletState{
@@ -418,7 +395,6 @@ func (m *Match) step(dt float64) {
 		}
 	}
 
-	// --- обновляем пули ---
 	if len(m.bullets) > 0 {
 		alive := m.bullets[:0]
 
@@ -427,20 +403,17 @@ func (m *Match) step(dt float64) {
 			b.Y += b.VelY * dt
 			b.TTL -= dt
 
-			// если уже умерла по времени — дальше даже не проверяем
 			if b.TTL <= 0 {
 				continue
 			}
-			// вышла за поле
 			if b.X < fieldMin || b.X > fieldMax || b.Y < fieldMin || b.Y > fieldMax {
 				continue
 			}
 
-			// проверяем коллизию с игроками
 			hit := false
 			for pid, p := range m.players {
 				if pid == b.OwnerID {
-					continue // себя не бьём
+					continue
 				}
 				if p.Dead {
 					continue
@@ -461,7 +434,6 @@ func (m *Match) step(dt float64) {
 			}
 
 			if hit {
-				// не добавляем пулю в alive — она "разорвалась"
 				continue
 			}
 
@@ -471,7 +443,6 @@ func (m *Match) step(dt float64) {
 		m.bullets = alive
 	}
 
-	// --- собираем снапшот ---
 	snap := StateSnapshot{
 		Players: make([]PlayerView, 0, len(m.players)),
 		Bullets: make([]BulletView, 0, len(m.bullets)),

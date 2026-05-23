@@ -36,26 +36,21 @@ func (s *Service) EnsureBattleRunning(ctx context.Context, roomID uuid.UUID, dur
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// 1. Пытаемся найти активную битву в БД
 	b, err := s.battles.GetActiveByRoom(ctx, roomID)
 	if err != nil {
-		// реальная ошибка (БД сдохла и т.п.) — валимся
 		return nil, err
 	}
 
-	// 1.1. Активной битвы нет — создаём новую
 	if b == nil {
 		s.log.Info("match_service: no active battle for room, creating new",
 			"room_id", roomID,
 		)
 
-		// создаём доменную битву
 		b, err = domain.NewBattle(roomID, durationMinutes)
 		if err != nil {
 			return nil, err
 		}
 
-		// сохраняем в репозиторий
 		if err := s.battles.Create(ctx, b); err != nil {
 			return nil, err
 		}
@@ -63,17 +58,13 @@ func (s *Service) EnsureBattleRunning(ctx context.Context, roomID uuid.UUID, dur
 
 	battleID := b.ID()
 
-	// 2. Если матч уже есть в памяти — просто возвращаем
 	if m, ok := s.matches[battleID]; ok {
 		return m, nil
 	}
 
-	// 3. Нет матча — создаём
 	m := NewMatch(battleID, s.hub, s.log)
 	s.matches[battleID] = m
 
-	// 4. Запускаем игровой цикл
-	// 4. Запускаем игровой цикл на фоне, независимо от r.Context()
 	go m.Run(context.Background())
 
 	return m, nil
