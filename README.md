@@ -34,7 +34,7 @@
 
 1. **Клонируйте репозиторий:**
    ```bash
-   git clone [https://github.com/sundabaoh-rgb/tankionline.git](https://github.com/sundabaoh-rgb/tankionline.git)
+   git clone git@github.com:sundabaoh-rgb/servTo.git
    cd tankionline
 2. **Запустите контейнер:**
    ```bash
